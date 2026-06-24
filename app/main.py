@@ -1,54 +1,52 @@
 """
-WA错题本 - FastAPI 应用入口
+WA错题本 - Flask 应用入口
 """
 
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+import asyncio
+import os
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 
 from app.config import settings
 from app.models.database import init_db
-from app.api.router import api_router
+from app.api.submission import bp as submission_bp
+from app.api.stats import bp as stats_bp
+
+# 项目根目录
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+
+app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="/static")
+CORS(app)
+
+app.register_blueprint(submission_bp)
+app.register_blueprint(stats_bp)
+
+_first_request_done = False
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """应用生命周期管理"""
-    # 启动时
-    await init_db()
-    print(f"\n🚀 {settings.app_name} v{settings.version} 启动成功")
-    print(f"   📂 数据库: {settings.database_url}")
-    print(f"   🌐 地址: http://{settings.host}:{settings.port}")
-    print(f"   📖 API文档: http://{settings.host}:{settings.port}/docs\n")
-
-    yield
-
-    # 关闭时
-    print("\n👋 应用已关闭")
+@app.before_request
+def before_first():
+    global _first_request_done
+    if not _first_request_done:
+        _first_request_done = True
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(init_db())
+        print(f"\n🚀 {settings.app_name} v{settings.version} 启动成功")
+        print(f"   📂 数据库: {settings.database_url}")
+        print(f"   🌐 地址: http://{settings.host}:{settings.port}\n")
 
 
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.version,
-    description="面向 OI/ACM 竞赛选手的智能错题管理平台",
-    lifespan=lifespan,
-)
-
-# 注册 API 路由
-app.include_router(api_router)
-
-# 挂载静态文件
-app.mount("/static", StaticFiles(directory="static"), name="static")
+@app.route("/")
+def root():
+    return send_from_directory(STATIC_DIR, "index.html")
 
 
-@app.get("/")
-async def root():
-    """首页"""
-    return FileResponse("static/index.html")
+@app.route("/health")
+def health_check():
+    return jsonify({"status": "ok", "version": settings.version})
 
 
-@app.get("/health")
-async def health_check():
-    """健康检查"""
-    return {"status": "ok", "version": settings.version}
+if __name__ == "__main__":
+    app.run(host=settings.host, port=settings.port, debug=settings.debug)

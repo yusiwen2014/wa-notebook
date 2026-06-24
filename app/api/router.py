@@ -1,12 +1,8 @@
 """
-API 路由汇总
+WA错题本 - API 路由汇总
 """
 
-from fastapi import APIRouter
-from app.api.submission import router as submission_router
-from app.api.stats import router as stats_router
+from app.api.submission import bp as submission_bp
+from app.api.stats import bp as stats_bp
 
-api_router = APIRouter()
-
-api_router.include_router(submission_router)
-api_router.include_router(stats_router)
+__all__ = ["submission_bp", "stats_bp"]

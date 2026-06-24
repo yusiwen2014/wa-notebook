@@ -9,13 +9,14 @@
 <body>
     <div class="container">
         <header>
-            <h1>📘 WA错题本</h1>
+            <h1>WA错题本</h1>
             <p class="subtitle">面向 OI/ACM 竞赛选手的智能错题管理平台</p>
         </header>
 
         <main>
             <section class="submit-section">
                 <h2>提交新错题</h2>
+
                 <div class="form-group">
                     <label for="platform">OJ 平台</label>
                     <select id="platform">
@@ -23,17 +24,38 @@
                         <option value="luogu">洛谷</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label for="url">提交链接</label>
                     <input type="text" id="url" placeholder="https://codeforces.com/contest/xxx/submission/xxx">
+                    <p class="input-hint">支持自动抓取 Codeforces / 洛谷提交记录</p>
                 </div>
+
+                <div class="form-group toggle-group">
+                    <button type="button" id="toggleManualBtn" class="btn-link">+ 无法自动抓取？手动粘贴代码</button>
+                </div>
+
+                <div id="manualInput" class="manual-input" style="display: none;">
+                    <div class="form-group">
+                        <label for="problemName">题目名称</label>
+                        <input type="text" id="problemName" placeholder="例如：A+B Problem">
+                    </div>
+                    <div class="form-group">
+                        <label for="codeInput">代码</label>
+                        <textarea id="codeInput" rows="10" placeholder="在此处粘贴你的代码..."></textarea>
+                    </div>
+                </div>
+
                 <button id="submitBtn" class="btn-primary">开始分析</button>
                 <div id="result" class="result-box" style="display: none;"></div>
             </section>
 
             <section class="list-section">
-                <h2>错题列表</h2>
-                <div id="mistakeList">加载中...</div>
+                <div class="section-header">
+                    <h2>错题列表</h2>
+                    <span id="mistakeCount" class="count-badge">0</span>
+                </div>
+                <div id="mistakeList" class="mistake-list">加载中...</div>
             </section>
         </main>
 

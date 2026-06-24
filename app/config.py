@@ -2,34 +2,28 @@
 WA错题本 - 应用配置
 """
 
-from pydantic_settings import BaseSettings
+import os
 from pathlib import Path
 
 
-class Settings(BaseSettings):
-    """应用全局配置"""
+# 项目根目录（基于本文件位置）
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
+DB_PATH = os.path.join(DATA_DIR, "wa_notebook.db")
 
-    # 应用信息
-    app_name: str = "WA错题本"
-    version: str = "0.0.1"
-    debug: bool = True
 
-    # 服务器
-    host: str = "127.0.0.1"
-    port: int = 8000
-
-    # 数据库
-    database_url: str = "sqlite+aiosqlite:///./data/wa_notebook.db"
-
-    # 支持的 OJ 平台
-    supported_platforms: list[str] = ["luogu", "codeforces"]
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+class Settings:
+    app_name = "WA错题本"
+    version = "0.0.1"
+    debug = True
+    host = "127.0.0.1"
+    port = 8080
+    # 使用绝对路径确保无论从哪启动都能找到数据库
+    database_url = f"sqlite+aiosqlite:///{DB_PATH}"
+    supported_platforms = ["luogu", "codeforces"]
 
 
 settings = Settings()
 
 # 确保 data 目录存在
-Path("./data").mkdir(exist_ok=True)
+Path(DATA_DIR).mkdir(exist_ok=True)
