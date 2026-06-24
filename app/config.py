@@ -14,7 +14,7 @@ DB_PATH = os.path.join(DATA_DIR, "wa_notebook.db")
 
 class Settings:
     app_name = "WA错题本"
-    version = "0.0.1"
+    version = "0.0.2"
     debug = True
     host = "127.0.0.1"
     port = 8081
