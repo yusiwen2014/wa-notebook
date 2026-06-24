@@ -3,67 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WA错题本 - 智能错题管理平台</title>
+    <title>WA错题本</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>WA错题本</h1>
-            <p class="subtitle">面向 OI/ACM 竞赛选手的智能错题管理平台</p>
-        </header>
 
-        <main>
-            <section class="submit-section">
-                <h2>提交新错题</h2>
+    <!-- 侧边栏 -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <span class="brand-icon">📘</span>
+                <span>WA错题本</span>
+            </div>
+            <div class="header-actions">
+                <button id="summaryBtn" class="btn-icon-sm" title="学习小结">📋</button>
+                <button id="settingsBtn" class="btn-icon-sm" title="设置">⚙️</button>
+            </div>
+        </div>
+        <button id="newMistakeBtn" class="btn-new">+ 新建分析</button>
 
-                <div class="form-group">
-                    <label for="platform">OJ 平台</label>
-                    <select id="platform">
+        <div class="sidebar-stats" id="sidebarStats">
+            <div class="stat-row"><span class="stat-label">总错题</span><span class="stat-value" id="statTotal">-</span></div>
+            <div class="stat-row"><span class="stat-label">未解决</span><span class="stat-value warning" id="statUnresolved">-</span></div>
+            <div class="stat-row"><span class="stat-label">深层问题</span><span class="stat-value danger" id="statHigh">-</span></div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-filter="">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>全部记录
+            </button>
+            <button class="nav-item" data-filter="false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>未解决
+            </button>
+            <button class="nav-item" data-filter="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>已解决
+            </button>
+        </nav>
+
+        <div class="sidebar-list-header"><span>历史记录</span></div>
+        <div class="sidebar-list" id="mistakeList"><div class="list-loading">加载中...</div></div>
+        <div class="sidebar-footer" id="sidebarFooter"></div>
+    </aside>
+
+    <!-- 主区域 -->
+    <main class="main-area" id="mainArea">
+
+        <!-- 欢迎屏 -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-content">
+                <h1 class="welcome-title">WA 错题本</h1>
+                <p class="welcome-sub">面向 OI/ACM 竞赛选手的智能错题管理平台</p>
+                <p class="welcome-hint">选择左侧一条错题查看详情，或在下方输入框和 AI 对话 / 提交链接分析</p>
+            </div>
+        </div>
+
+        <!-- 学习小结仪表盘 -->
+        <div class="summary-view" id="summaryView" style="display: none;">
+            <div class="summary-scroll">
+                <div class="summary-header-bar">
+                    <h2>📋 学习小结</h2>
+                    <span class="summary-date" id="summaryDate"></span>
+                </div>
+
+                <!-- KPI 卡片 -->
+                <div class="kpi-grid" id="kpiGrid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-data">
+                            <div class="kpi-value" id="kpiTotal">0</div>
+                            <div class="kpi-label">累计错题</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">✅</div>
+                        <div class="kpi-data">
+                            <div class="kpi-value success" id="kpiResolved">0</div>
+                            <div class="kpi-label">已解决</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-data">
+                            <div class="kpi-value warning" id="kpiUnresolved">0</div>
+                            <div class="kpi-label">待处理</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🔥</div>
+                        <div class="kpi-data">
+                            <div class="kpi-value danger" id="kpiHigh">0</div>
+                            <div class="kpi-label">深层问题</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">📈</div>
+                        <div class="kpi-data">
+                            <div class="kpi-value accent" id="kpiRate">0%</div>
+                            <div class="kpi-label">解决率</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>错误分类分布</h3>
+                        <div class="chart-wrap"><canvas id="catPieChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>严重程度对比</h3>
+                        <div class="chart-wrap"><canvas id="sevBarChart"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>按日期趋势</h3>
+                        <div class="chart-wrap"><canvas id="trendLineChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- AI 小结 + 表格 -->
+                <div class="summary-bottom">
+                    <div class="ai-summary-box" id="aiSummaryBox">
+                        <h3>🤖 AI 学习诊断</h3>
+                        <div class="ai-summary-text" id="aiSummaryText">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 错题明细表 -->
+                <div class="table-section">
+                    <h3>错题明细</h3>
+                    <div class="table-wrap">
+                        <table class="data-table" id="mistakeTable">
+                            <thead>
+                                <tr>
+                                    <th>题目</th>
+                                    <th>平台</th>
+                                    <th>分类</th>
+                                    <th>严重度</th>
+                                    <th>状态</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mistakeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊天视图 -->
+        <div class="chat-view" id="chatView" style="display: none;">
+            <div class="chat-messages" id="chatMessages"></div>
+        </div>
+
+        <!-- 详情视图 -->
+        <div class="detail-view" id="detailView" style="display: none;">
+            <div class="detail-scroll">
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h2 id="detailTitle">题目名称</h2>
+                        <div class="detail-badges">
+                            <span class="badge" id="detailPlatform">CF</span>
+                            <span class="badge" id="detailStatus">WA</span>
+                            <span class="badge severity" id="detailSeverity">🔴 高</span>
+                        </div>
+                    </div>
+                    <div class="detail-section"><h3>错误分类</h3><p id="detailCategory">-</p></div>
+                    <div class="detail-section"><h3>错误概述</h3><p id="detailSummary">-</p></div>
+                    <div class="detail-section"><h3>详细分析</h3><p id="detailDetail">-</p></div>
+                    <div class="detail-section"><h3>修改建议</h3><p id="detailSuggestion">-</p></div>
+                    <div class="detail-actions">
+                        <button id="hintBtn" class="btn-action">💡 获取提示</button>
+                        <button id="resolveBtn" class="btn-action success">✅ 标记已解决</button>
+                        <button id="deleteBtn" class="btn-action danger">🗑 删除</button>
+                    </div>
+                    <div id="hintBox" class="hint-box" style="display: none;"></div>
+                    <div class="detail-section code-section"><h3>提交代码</h3><pre id="detailCode"><code></code></pre></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部输入区 -->
+        <div class="input-bar" id="inputBar">
+            <div class="input-wrapper">
+                <textarea id="chatInput" rows="1" placeholder="输入提交链接或与 AI 对话..."></textarea>
+                <div class="input-toolbar">
+                    <select id="platformSelect" class="toolbar-select">
                         <option value="codeforces">Codeforces</option>
                         <option value="luogu">洛谷</option>
                     </select>
+                    <button id="sendBtn" class="btn-send" title="发送">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+                    </button>
                 </div>
+            </div>
+        </div>
+    </main>
 
-                <div class="form-group">
-                    <label for="url">提交链接</label>
-                    <input type="text" id="url" placeholder="https://codeforces.com/contest/xxx/submission/xxx">
-                    <p class="input-hint">支持自动抓取 Codeforces / 洛谷提交记录</p>
-                </div>
-
-                <div class="form-group toggle-group">
-                    <button type="button" id="toggleManualBtn" class="btn-link">+ 无法自动抓取？手动粘贴代码</button>
-                </div>
-
-                <div id="manualInput" class="manual-input" style="display: none;">
-                    <div class="form-group">
-                        <label for="problemName">题目名称</label>
-                        <input type="text" id="problemName" placeholder="例如：A+B Problem">
-                    </div>
-                    <div class="form-group">
-                        <label for="codeInput">代码</label>
-                        <textarea id="codeInput" rows="10" placeholder="在此处粘贴你的代码..."></textarea>
-                    </div>
-                </div>
-
-                <button id="submitBtn" class="btn-primary">开始分析</button>
-                <div id="result" class="result-box" style="display: none;"></div>
-            </section>
-
-            <section class="list-section">
-                <div class="section-header">
-                    <h2>错题列表</h2>
-                    <span id="mistakeCount" class="count-badge">0</span>
-                </div>
-                <div id="mistakeList" class="mistake-list">加载中...</div>
-            </section>
-        </main>
-
-        <footer>
-            <p>WA错题本 v0.0.1 | TRAE AI 创造力大赛 2026</p>
-        </footer>
+    <!-- 新建分析弹窗 -->
+    <div id="modalOverlay" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">新建分析</h3><button class="modal-close" id="modalClose">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
     </div>
 
+    <!-- 设置弹窗 -->
+    <div id="settingsModal" class="modal-overlay" style="display: none;">
+        <div class="modal modal-lg">
+            <div class="modal-header"><h3>⚙️ 设置</h3><button class="modal-close" onclick="closeSettings()">&times;</button></div>
+            <div class="modal-body" id="settingsBody"></div>
+            <div class="modal-footer" id="settingsFooter"></div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

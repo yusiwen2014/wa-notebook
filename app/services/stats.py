@@ -24,7 +24,10 @@ async def get_overview_stats() -> dict:
             .join(Mistake, Mistake.submission_id == Submission.id)
             .group_by(Submission.platform)
         )
-        by_platform = {str(k): v for k, v in plat_result.all()}
+        by_platform = {}
+        for row in plat_result.all():
+            platform_value = row[0].value if hasattr(row[0], "value") else str(row[0])
+            by_platform[platform_value] = row[1]
 
         sev_result = await session.execute(
             select(Mistake.error_severity, func.count())

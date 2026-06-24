@@ -1,11 +1,20 @@
 from marshmallow import Schema, fields, validate
 
 
+class AIConfigSchema(Schema):
+    provider = fields.Str(load_default=None)
+    base_url = fields.Str(load_default=None)
+    api_key = fields.Str(load_default=None)
+    model = fields.Str(load_default=None)
+    prompt = fields.Str(load_default=None)
+
+
 class SubmissionCreateRequestSchema(Schema):
     url = fields.Str(required=True)
     platform = fields.Str(required=True, validate=validate.OneOf(["luogu", "codeforces"]))
     code = fields.Str(load_default=None)
     problem_name = fields.Str(load_default=None)
+    ai_config = fields.Nested(AIConfigSchema, load_default=None)
 
 
 class EnumField(fields.Field):

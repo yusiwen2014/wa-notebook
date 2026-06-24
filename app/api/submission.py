@@ -16,6 +16,7 @@ from app.schemas.submission import (
 )
 from app.services.scraper import scraper
 from app.services.analyzer import analyzer
+from app.services.ai_client import AIAnalyzerClient
 from app.utils.oj_detector import detect_platform, parse_submission_url
 
 bp = Blueprint("submission", __name__, url_prefix="/api/v1")
@@ -109,11 +110,27 @@ def create_mistake():
             session.add(submission)
             await session.flush()
 
-            analysis = analyzer.analyze(
-                code=submission.code,
-                status=submission.status.value,
-                problem_name=submission.problem_name,
-            )
+            ai_config = data.get("ai_config") or {}
+            if ai_config.get("provider") and ai_config.get("provider") != "mock" and ai_config.get("api_key"):
+                ai_client = AIAnalyzerClient(
+                    provider=ai_config.get("provider", "openai"),
+                    api_key=ai_config.get("api_key"),
+                    base_url=ai_config.get("base_url"),
+                    model=ai_config.get("model"),
+                    prompt=ai_config.get("prompt"),
+                )
+                analysis = await ai_client.analyze(
+                    code=submission.code,
+                    status=submission.status.value,
+                    problem_name=submission.problem_name,
+                    language=submission.language,
+                )
+            else:
+                analysis = analyzer.analyze(
+                    code=submission.code,
+                    status=submission.status.value,
+                    problem_name=submission.problem_name,
+                )
 
             mistake = Mistake(
                 submission_id=submission.id,

@@ -17,7 +17,7 @@ class Settings:
     version = "0.0.1"
     debug = True
     host = "127.0.0.1"
-    port = 8080
+    port = 8081
     # 使用绝对路径确保无论从哪启动都能找到数据库
     database_url = f"sqlite+aiosqlite:///{DB_PATH}"
     supported_platforms = ["luogu", "codeforces"]

@@ -11,6 +11,7 @@ from app.config import settings
 from app.models.database import init_db
 from app.api.submission import bp as submission_bp
 from app.api.stats import bp as stats_bp
+from app.api.chat import chat_bp as chat_bp
 
 # 项目根目录
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,6 +22,7 @@ CORS(app)
 
 app.register_blueprint(submission_bp)
 app.register_blueprint(stats_bp)
+app.register_blueprint(chat_bp)
 
 _first_request_done = False
 
