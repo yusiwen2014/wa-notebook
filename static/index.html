@@ -26,7 +26,7 @@
         <div class="sidebar-stats" id="sidebarStats">
             <div class="stat-row"><span class="stat-label">总错题</span><span class="stat-value" id="statTotal">-</span></div>
             <div class="stat-row"><span class="stat-label">未解决</span><span class="stat-value warning" id="statUnresolved">-</span></div>
-            <div class="stat-row"><span class="stat-label">深层问题</span><span class="stat-value danger" id="statHigh">-</span></div>
+            <div class="stat-row"><span class="stat-label">已 AC</span><span class="stat-value success" id="statHigh">-</span></div>
         </div>
 
         <nav class="sidebar-nav">
@@ -92,8 +92,8 @@
                     <div class="kpi-card">
                         <div class="kpi-icon">🔥</div>
                         <div class="kpi-data">
-                            <div class="kpi-value danger" id="kpiHigh">0</div>
-                            <div class="kpi-label">深层问题</div>
+                            <div class="kpi-value success" id="kpiHigh">0</div>
+                            <div class="kpi-label">已 AC</div>
                         </div>
                     </div>
                     <div class="kpi-card">
@@ -139,7 +139,6 @@
                                     <th>题目</th>
                                     <th>平台</th>
                                     <th>分类</th>
-                                    <th>严重度</th>
                                     <th>状态</th>
                                     <th>时间</th>
                                 </tr>
@@ -164,21 +163,31 @@
                         <h2 id="detailTitle">题目名称</h2>
                         <div class="detail-badges">
                             <span class="badge" id="detailPlatform">CF</span>
-                            <span class="badge" id="detailStatus">WA</span>
-                            <span class="badge severity" id="detailSeverity">🔴 高</span>
+                            <span class="badge" id="detailStatus">WA(思路错误)</span>
                         </div>
                     </div>
                     <div class="detail-section"><h3>错误分类</h3><p id="detailCategory">-</p></div>
                     <div class="detail-section"><h3>错误概述</h3><p id="detailSummary">-</p></div>
                     <div class="detail-section"><h3>详细分析</h3><p id="detailDetail">-</p></div>
                     <div class="detail-section"><h3>修改建议</h3><p id="detailSuggestion">-</p></div>
+                    <div class="detail-section error-points-section">
+                        <h3>🤖 AI 错误点</h3>
+                        <ul id="aiErrorPoints" class="error-points-list"></ul>
+                    </div>
+                    <div class="detail-section reflection-section">
+                        <h3>📝 补充错误点</h3>
+                        <textarea id="reflectionInput" rows="4" placeholder="记录这道题的具体错误点：错因是什么？下次如何避免？关键代码/边界条件是什么？"></textarea>
+                        <div class="reflection-actions">
+                            <button id="saveReflectionBtn" class="btn-action">💾 保存补充</button>
+                            <span id="reflectionStatus" class="reflection-status"></span>
+                        </div>
+                    </div>
                     <div class="detail-actions">
                         <button id="hintBtn" class="btn-action">💡 获取提示</button>
                         <button id="resolveBtn" class="btn-action success">✅ 标记已解决</button>
                         <button id="deleteBtn" class="btn-action danger">🗑 删除</button>
                     </div>
                     <div id="hintBox" class="hint-box" style="display: none;"></div>
-                    <div class="detail-section code-section"><h3>提交代码</h3><pre id="detailCode"><code></code></pre></div>
                 </div>
             </div>
         </div>
@@ -188,10 +197,13 @@
             <div class="input-wrapper">
                 <textarea id="chatInput" rows="1" placeholder="输入提交链接或与 AI 对话..."></textarea>
                 <div class="input-toolbar">
-                    <select id="platformSelect" class="toolbar-select">
-                        <option value="codeforces">Codeforces</option>
-                        <option value="luogu">洛谷</option>
-                    </select>
+                    <div class="toolbar-left">
+                        <select id="platformSelect" class="toolbar-select">
+                            <option value="codeforces">Codeforces</option>
+                            <option value="luogu">洛谷</option>
+                        </select>
+                        <button id="perQuestionBtn" class="toolbar-btn" title="每题一结">每题一结</button>
+                    </div>
                     <button id="sendBtn" class="btn-send" title="发送">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
                     </button>

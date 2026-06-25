@@ -140,6 +140,7 @@ def create_mistake():
                 error_detail=analysis["error_detail"],
                 suggestion=analysis["suggestion"],
                 hints=analysis["hints"],
+                error_points=analysis.get("error_points") or [],
             )
             session.add(mistake)
             await session.commit()
@@ -269,3 +270,22 @@ def delete_mistake(mistake_id):
             return "", 204
 
     return run_async(_delete)
+
+
+@bp.route("/mistakes/<int:mistake_id>/reflection", methods=["PATCH"])
+def update_reflection(mistake_id):
+    """更新错题反思"""
+    data = request.get_json(silent=True) or {}
+    reflection = data.get("reflection", "")
+
+    async def _update():
+        async with async_session() as session:
+            mistake = await session.get(Mistake, mistake_id)
+            if not mistake:
+                return {"error": "错题不存在"}, 404
+
+            mistake.reflection = reflection
+            await session.commit()
+            return {"message": "反思已保存", "mistake_id": mistake_id}, 200
+
+    return run_async(_update)

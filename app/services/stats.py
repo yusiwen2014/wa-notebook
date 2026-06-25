@@ -50,8 +50,16 @@ async def get_overview_stats() -> dict:
             for row in trend_result.all()
         ]
 
+        resolved_result = await session.execute(
+            select(func.count()).select_from(Mistake).where(Mistake.resolved == True)
+        )
+        resolved_count = resolved_result.scalar() or 0
+        unresolved_count = total - resolved_count
+
         return {
             "total_mistakes": total,
+            "resolved_count": resolved_count,
+            "unresolved_count": unresolved_count,
             "by_category": by_category,
             "by_platform": by_platform,
             "by_severity": by_severity,
@@ -59,17 +67,13 @@ async def get_overview_stats() -> dict:
         }
 
 
+# v0.0.3 新的分类体系
 CATEGORY_NAMES = {
-    "logic_error": "逻辑错误",
-    "boundary": "边界条件",
-    "overflow": "整数溢出",
-    "uninitialized": "未初始化",
-    "complexity": "复杂度超限",
-    "precision": "精度问题",
-    "io_format": "输入输出格式",
-    "memory": "内存超限",
-    "typo": "拼写笔误",
-    "modular": "取模错误",
-    "graph": "图论细节",
-    "dp": "DP状态/转移",
+    "CE": "CE 编译错误",
+    "RE_div0": "RE 除以零",
+    "RE_oob": "RE 越界访问",
+    "WA_logic": "WA 思路错误",
+    "WA_code": "WA 代码错误",
+    "TLE": "TLE 时间超限",
+    "MLE": "MLE 内存超限",
 }

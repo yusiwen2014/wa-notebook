@@ -38,7 +38,7 @@ function loadSettings() {
         aiApiKey: '',
         aiBaseUrl: '',
         aiModel: '',
-        globalPrompt: '你是一位资深的 OI/ACM 竞赛教练。擅长代码分析、算法讲解、竞赛答疑。请用中文回答。',
+        globalPrompt: '你是一位资深的 OI/ACM 竞赛教练。擅长代码分析、算法讲解、竞赛答疑。请用中文回答，使用标准 Markdown 格式。',
     };
     try { return { ...defaults, ...JSON.parse(localStorage.getItem('waSettings') || '{}') }; }
     catch { return defaults; }
@@ -49,6 +49,21 @@ function saveSettings(s) { currentSettings = s; localStorage.setItem('waSettings
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function fmtCat(c) { return categoryNames[c] || c; }
+
+/** 把内部分类显示为 WA(思路错误) / RE(除以零) 等格式 */
+function fmtStatusBadge(c, resolved) {
+    if (resolved) return 'AC';
+    const map = {
+        'CE': 'CE',
+        'RE_div0': 'RE(除以零)',
+        'RE_oob': 'RE(越界访问)',
+        'WA_logic': 'WA(思路错误)',
+        'WA_code': 'WA(代码错误)',
+        'TLE': 'TLE',
+        'MLE': 'MLE',
+    };
+    return map[c] || c;
+}
 
 function fmtTime() {
     const now = new Date();
@@ -64,6 +79,61 @@ async function apiCall(method, path, body = null) {
     try { data = JSON.parse(text); } catch { data = text; }
     if (!res.ok) throw new Error(typeof data === 'string' ? data : (data?.error || data?.detail || `HTTP ${res.status}`));
     return data;
+}
+
+// ====== 标准 Markdown 渲染器 ======
+function renderMarkdown(text) {
+    if (!text) return '';
+    let html = esc(text);
+
+    // 代码块（优先处理）
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => `<pre><code class="language-${lang || 'text'}">${esc(code)}</code></pre>`);
+
+    // 标题
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // 引用
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // 无序列表
+    html = html.replace(/(?:^|\n)(?:-\s|\*\s|\+\s)(.+?)(?=\n(?:-\s|\*\s|\+\s)|\n\n|$)/gs, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // 有序列表
+    html = html.replace(/(?:^|\n)\d+\.\s(.+?)(?=\n\d+\.\s|\n\n|$)/gs, '<li>$1</li>');
+
+    // 粗体、斜体
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+    // 行内代码
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
+    // 表格（简化版）
+    html = html.replace(/\|(.+?)\|\n\|[-:\s|]+\|\n((?:\|.+?\|\n?)+)/g, (match, header, rows) => {
+        const ths = header.split('|').map(h => `<th>${h.trim()}</th>`).join('');
+        const trs = rows.trim().split('\n').map(row => {
+            const tds = row.slice(1, -1).split('|').map(c => `<td>${c.trim()}</td>`).join('');
+            return `<tr>${tds}</tr>`;
+        }).join('');
+        return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    });
+
+    // 换行
+    html = html.replace(/\n/g, '<br>');
+
+    // 把连续 br 包裹在 p 里（简单段落化）
+    html = html.split(/(<pre>[\s\S]*?<\/pre>|<table>[\s\S]*?<\/table>|<blockquote>.*?<\/blockquote>|<h\d>.*?<\/h\d>|<ul>.*?<\/ul>)/g)
+        .map(part => {
+            if (part.startsWith('<pre>') || part.startsWith('<table>') || part.startsWith('<blockquote>') || part.startsWith('<h') || part.startsWith('<ul>')) return part;
+            if (!part.trim()) return '';
+            return part.split(/<br><br>/).map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+        })
+        .join('');
+
+    return `<div class="ai-md">${html}</div>`;
 }
 
 // ====== Toast ======
@@ -167,7 +237,7 @@ $('newMistakeBtn').addEventListener('click', () => {
     ]);
 });
 
-// ====== 发送处理 - 核心路由 ======
+// ====== 发送处理 ======
 sendBtn.addEventListener('click', handleSend);
 chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
 
@@ -184,14 +254,19 @@ chatInput.addEventListener('input', autoResizeInput);
 
 // ====== AI 聊天 ======
 
-function appendMessage(role, content) {
+function appendMessage(role, content, isMarkdown = false) {
     const row = document.createElement('div');
     row.className = `msg-row ${role}`;
-    let rendered = esc(content);
-    rendered = rendered.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    rendered = rendered.replace(/`(.+?)`/g, '<code>$1</code>');
-    rendered = rendered.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-    row.innerHTML = `<div class="msg-avatar">${role==='user'?'你':'AI'}</div><div><div class="msg-bubble">${rendered}</div><div class="msg-time">${fmtTime()}</div></div>`;
+
+    const bubbleHtml = role === 'ai' && isMarkdown
+        ? renderMarkdown(content)
+        : `<div class="msg-bubble"><p>${esc(content)}</p></div>`;
+
+    const avatar = role === 'user'
+        ? '<div class="msg-avatar">👤</div>'
+        : '<div class="msg-avatar" style="display:none"></div>';
+
+    row.innerHTML = `${avatar}<div class="msg-content">${bubbleHtml}<div class="msg-time">${fmtTime()}</div></div>`;
     chatMessages.appendChild(row);
     scrollToBottom();
 }
@@ -199,7 +274,7 @@ function appendMessage(role, content) {
 function showTyping() {
     const row = document.createElement('div');
     row.className = 'msg-row ai'; row.id = 'typingRow';
-    row.innerHTML = `<div class="msg-avatar">AI</div><div><div class="msg-bubble"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div></div>`;
+    row.innerHTML = `<div class="msg-content"><div class="ai-md"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div></div>`;
     chatMessages.appendChild(row); scrollToBottom();
 }
 function hideTyping() { const el = $('typingRow'); if (el) el.remove(); }
@@ -215,12 +290,74 @@ async function doChat(userMsg) {
         const result = await apiCall('POST', '/chat', { messages: chatHistory, ai_config: buildAiConfig() });
         hideTyping();
         const reply = result.reply || result.error || '(无回复)';
-        appendMessage('ai', reply);
+        appendMessage('ai', reply, true);
         chatHistory.push({ role: 'assistant', content: reply });
     } catch (err) {
         hideTyping();
-        appendMessage('ai', `抱歉，出错了：${err.message}`);
+        appendMessage('ai', `抱歉，出错了：${err.message}`, true);
     } finally { sendBtn.disabled = false; chatInput.focus(); }
+}
+
+// ====== 每题一结 ======
+$('perQuestionBtn').addEventListener('click', doPerQuestionSummary);
+
+async function doPerQuestionSummary() {
+    // 如果当前在详情页，直接基于当前错题；否则让用户选择或生成所有错题的总结
+    let targetMistake = null;
+    if (currentMistakeId) {
+        targetMistake = allMistakes.find(m => m.id === currentMistakeId);
+    }
+
+    // 如果不在详情页且列表里只有一条，直接用那条
+    if (!targetMistake && allMistakes.length === 1) {
+        targetMistake = allMistakes[0];
+    }
+
+    if (!targetMistake) {
+        // 弹窗让用户选择
+        if (!allMistakes.length) { toast('没有错题', '请先分析至少一道错题', 'warning'); return; }
+        openModal('选择题目', `
+            <div class="settings-form">
+                <div class="form-group"><label>选择要生成小结的题目</label><select id="pqSelect">${allMistakes.map(m => `<option value="${m.id}">${esc(m.submission?.problem_name || '未知题目')} - ${esc(fmtCat(m.error_category))}</option>`).join('')}</select></div>
+            </div>`, [
+            { text: '取消' },
+            { text: '生成每题一结', primary: true, onClick: async () => {
+                const id = parseInt(document.getElementById('pqSelect').value);
+                const m = allMistakes.find(x => x.id === id);
+                if (m) await generatePerQuestionTable(m);
+            }}
+        ]);
+        return;
+    }
+
+    await generatePerQuestionTable(targetMistake);
+}
+
+async function generatePerQuestionTable(mistake) {
+    showView('chat');
+    const sub = mistake.submission || {};
+    const title = sub.problem_name || '未知题目';
+    appendMessage('user', `请为「${title}」生成每题一结表格`);
+    showTyping(); sendBtn.disabled = true;
+
+    const prompt = `请为以下错题生成一份名为「每题一结」的 Markdown 表格总结。表格至少包含：题目、错误类型、错误原因、改正措施、同类题防范建议。\n\n题目：${title}\n平台：${sub.platform || '?'}\n状态：${mistake.resolved ? 'AC' : (sub.status || 'WA')}\n错误分类：${fmtCat(mistake.error_category)}\n错误概述：${mistake.error_summary}\n详细分析：${mistake.error_detail}\n修改建议：${mistake.suggestion || '无'}`;
+
+    try {
+        const result = await apiCall('POST', '/chat', {
+            messages: [{ role: 'user', content: prompt }],
+            ai_config: buildAiConfig(),
+        });
+        hideTyping();
+        appendMessage('ai', result.reply || '(生成失败)', true);
+        chatHistory.push({ role: 'user', content: prompt });
+        chatHistory.push({ role: 'assistant', content: result.reply });
+    } catch (err) {
+        hideTyping();
+        appendMessage('ai', `生成失败：${err.message}`, true);
+    } finally {
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
 }
 
 // ====== 分析提交 ======
@@ -253,19 +390,47 @@ function showDetail(mistake) {
     showView('detail');
     $('detailTitle').textContent = sub.problem_name || '未知题目';
     $('detailPlatform').textContent = (sub.platform || '?').toUpperCase();
-    $('detailStatus').textContent = sub.status || 'WA';
-    $('detailSeverity').textContent = mistake.error_severity === 'high' ? '🔴 深层问题' : '🟡 低级错误';
+    $('detailStatus').textContent = fmtStatusBadge(mistake.error_category, mistake.resolved);
+    $('detailStatus').className = 'badge ' + (mistake.resolved ? 'success' : '');
     $('detailCategory').textContent = fmtCat(mistake.error_category);
     $('detailSummary').textContent = mistake.error_summary;
     $('detailDetail').textContent = mistake.error_detail;
     $('detailSuggestion').textContent = mistake.suggestion || '无';
+
+    // AI 错误点
+    const aiPoints = mistake.error_points || [];
+    $('aiErrorPoints').innerHTML = aiPoints.length
+        ? aiPoints.map(p => `<li>${esc(p)}</li>`).join('')
+        : '<li style="color:var(--text-dim);list-style:none">暂无 AI 错误点</li>';
+
+    // 手动补充错误点
+    $('reflectionInput').value = mistake.reflection || '';
+    $('reflectionStatus').textContent = '';
+    $('saveReflectionBtn').onclick = () => saveReflection(mistake.id);
+
     $('hintBox').style.display = 'none';
     $('hintBtn').onclick = () => getHint(mistake.id);
     $('resolveBtn').onclick = () => resolveMistake(mistake.id);
+    $('resolveBtn').textContent = mistake.resolved ? '✅ 已 AC' : '✅ 标记 AC';
+    $('resolveBtn').disabled = !!mistake.resolved;
     $('deleteBtn').onclick = () => deleteMistake(mistake.id);
-    $('detailCode').querySelector('code').textContent = sub.code || '(无代码数据)';
     highlightEntry(mistake.id);
     detailView.querySelector('.detail-scroll').scrollTop = 0;
+}
+
+async function saveReflection(id) {
+    const content = $('reflectionInput').value.trim();
+    try {
+        await apiCall('PATCH', `/mistakes/${id}/reflection`, { reflection: content });
+        $('reflectionStatus').textContent = '已保存';
+        // 更新本地缓存
+        const m = allMistakes.find(x => x.id === id);
+        if (m) m.reflection = content;
+        toast('补充错误点已保存', '', 'success');
+    } catch (err) {
+        $('reflectionStatus').textContent = '保存失败';
+        toast('保存失败', err.message, 'error');
+    }
 }
 
 function highlightEntry(id) {
@@ -285,9 +450,12 @@ async function getHint(id) {
 async function resolveMistake(id) {
     try {
         await apiCall('PATCH', `/mistakes/${id}/resolve`);
-        toast('操作成功', '已标记为解决', 'success');
+        toast('操作成功', '已标记为 AC', 'success');
         await Promise.all([loadMistakes(), loadStats()]);
-        if (currentMistakeId === id) $('resolveBtn').style.display = 'none';
+        if (currentMistakeId === id) {
+            const updated = allMistakes.find(m => m.id === id);
+            if (updated) showDetail(updated);
+        }
     } catch (e) { toast('失败', e.message, 'error'); }
 }
 
@@ -305,15 +473,10 @@ $('summaryBtn').addEventListener('click', doSummary);
 
 async function doSummary() {
     showView('summary');
-
-    // 设置日期
     $('summaryDate').textContent = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    // 显示加载状态
     $('kpiTotal').textContent = '...';
     $('aiSummaryText').textContent = '正在加载数据并生成诊断报告...';
 
-    // 获取所有数据
     try {
         const [stats, mistakes] = await Promise.all([
             apiCall('GET', '/stats'),
@@ -329,23 +492,19 @@ async function doSummary() {
     }
 }
 
-/** 渲染 KPI 卡片 */
 function renderKPI(stats, mistakes) {
     const total = stats.total_mistakes;
-    const high = stats.by_severity?.high || 0;
-    const low = stats.by_severity?.low || 0;
-    const resolved = mistakes.filter(m => m.resolved).length;
-    const unresolved = total - resolved;
+    const resolved = stats.resolved_count ?? mistakes.filter(m => m.resolved).length;
+    const unresolved = stats.unresolved_count ?? (total - resolved);
     const rate = total > 0 ? Math.round(resolved / total * 100) : 0;
 
     animateNumber('kpiTotal', total);
     animateNumber('kpiResolved', resolved);
     animateNumber('kpiUnresolved', unresolved);
-    animateNumber('kpiHigh', high);
+    animateNumber('kpiHigh', resolved);
     $('kpiRate').textContent = rate + '%';
 }
 
-/** 数字动画 */
 function animateNumber(id, target) {
     const el = $(id);
     const start = parseInt(el.textContent) || 0;
@@ -360,9 +519,7 @@ function animateNumber(id, target) {
 }
 function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
-/** 渲染图表 */
 function renderCharts(stats, mistakes) {
-    // ---- 饼图：错误分类分布 ----
     const catCount = {};
     mistakes.forEach(m => { catCount[m.error_category] = (catCount[m.error_category] || 0) + 1; });
     const catLabels = Object.keys(catCount).map(c => fmtCat(c));
@@ -372,131 +529,57 @@ function renderCharts(stats, mistakes) {
     if (catPieChart) catPieChart.destroy();
     catPieChart = new Chart($('catPieChart'), {
         type: 'doughnut',
-        data: {
-            labels: catLabels,
-            datasets: [{
-                data: catData,
-                backgroundColor: pieColors.slice(0, catLabels.length),
-                borderWidth: 0,
-                hoverOffset: 6,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'right', labels: { color: '#8b909d', font: { size: 11 }, padding: 10, usePointStyle: true, pointStyle: 'circle' } } },
-            cutout: '55%',
-        }
+        data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: pieColors.slice(0, catLabels.length), borderWidth: 0, hoverOffset: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#8b909d', font: { size: 11 }, padding: 10, usePointStyle: true, pointStyle: 'circle' } } }, cutout: '55%' }
     });
 
-    // ---- 柱状图：严重程度对比 ----
     const sevHigh = stats.by_severity?.high || 0;
     const sevLow = stats.by_severity?.low || 0;
     if (sevBarChart) sevBarChart.destroy();
     sevBarChart = new Chart($('sevBarChart'), {
         type: 'bar',
-        data: {
-            labels: ['深层问题', '低级错误'],
-            datasets: [{
-                data: [sevHigh, sevLow],
-                backgroundColor: ['rgba(255,90,101,.7)', 'rgba(251,191,36,.7)'],
-                borderRadius: 8,
-                barThickness: 40,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5f6d' } },
-                x: { grid: { display: false }, ticks: { color: '#8b909d' } },
-            },
-            plugins: { legend: { display: false } },
-        }
+        data: { labels: ['深层问题', '低级错误'], datasets: [{ data: [sevHigh, sevLow], backgroundColor: ['rgba(255,90,101,.7)', 'rgba(251,191,36,.7)'], borderRadius: 8, barThickness: 40 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5f6d' } }, x: { grid: { display: false }, ticks: { color: '#8b909d' } } }, plugins: { legend: { display: false } } }
     });
 
-    // ---- 折线图：按日期趋势 ----
     const dateMap = {};
-    mistakes.forEach(m => {
-        const d = new Date(m.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
-        dateMap[d] = (dateMap[d] || 0) + 1;
-    });
-    const sortedDates = Object.keys(dateMap).sort((a,b) => {
-        // 简单排序
-        const da = a.split(/[/\s]/), db = b.split(/[/\s]/);
-        return new Date(`2024/${da[0]}/${da[1]}`) - new Date(`2024/${db[0]}/${db[1]}`);
-    });
+    mistakes.forEach(m => { const d = new Date(m.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }); dateMap[d] = (dateMap[d] || 0) + 1; });
+    const sortedDates = Object.keys(dateMap).sort((a,b) => new Date('2024/' + a) - new Date('2024/' + b));
     const trendLabels = sortedDates.length > 14 ? sortedDates.slice(-14) : sortedDates;
     const trendData = trendLabels.map(d => dateMap[d]);
 
     if (trendLineChart) trendLineChart.destroy();
     trendLineChart = new Chart($('trendLineChart'), {
         type: 'line',
-        data: {
-            labels: trendLabels,
-            datasets: [{
-                label: '新增错题',
-                data: trendData,
-                borderColor: '#00d4ff',
-                backgroundColor: 'rgba(0,212,255,.08)',
-                fill: true,
-                tension: .35,
-                pointRadius: 4,
-                pointBackgroundColor: '#0a0b0e',
-                pointBorderColor: '#00d4ff',
-                pointBorderWidth: 2,
-                pointHoverRadius: 6,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5f6d', stepSize: 1 } },
-                x: { grid: { display: false }, ticks: { color: '#8b909d', maxRotation: 45 } },
-            },
-            plugins: { legend: { display: false } },
-        }
+        data: { labels: trendLabels, datasets: [{ label: '新增错题', data: trendData, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.08)', fill: true, tension: .35, pointRadius: 4, pointBackgroundColor: '#0a0b0e', pointBorderColor: '#00d4ff', pointBorderWidth: 2, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a5f6d', stepSize: 1 } }, x: { grid: { display: false }, ticks: { color: '#8b909d', maxRotation: 45 } } }, plugins: { legend: { display: false } } }
     });
 }
 
-/** 渲染明细表 */
 function renderTable(mistakes) {
     const tbody = $('mistakeTableBody');
-    if (!mistakes.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:24px">暂无记录</td></tr>'; return; }
+    if (!mistakes.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:24px">暂无记录</td></tr>'; return; }
 
     tbody.innerHTML = mistakes.map(m => {
         const sub = m.submission || {};
         const name = esc(sub.problem_name || '未知题目');
         const plat = esc((sub.platform || '?').toUpperCase());
         const cat = esc(fmtCat(m.error_category));
-        const sev = m.error_severity === 'high'
-            ? '<span class="tag-sev-high">深层</span>'
-            : '<span class="tag-sev-low">低级</span>';
         const status = m.resolved
-            ? '<span class="tag-resolved">已解决</span>'
-            : '<span class="tag-unresolved">未解决</span>';
+            ? '<span class="tag-resolved">AC</span>'
+            : `<span class="tag-unresolved">${esc(fmtStatusBadge(m.error_category, false))}</span>`;
         const date = new Date(m.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        return `<tr onclick="selectMistake(${m.id})" style="cursor:pointer"><td>${name}</td><td>${plat}</td><td>${cat}</td><td>${sev}</td><td>${status}</td><td style="color:var(--text-dim);white-space:nowrap">${date}</td></tr>`;
+        return `<tr onclick="selectMistake(${m.id})" style="cursor:pointer"><td>${name}</td><td>${plat}</td><td>${cat}</td><td>${status}</td><td style="color:var(--text-dim);white-space:nowrap">${date}</td></tr>`;
     }).join('');
 }
 
-/** 获取 AI 小结文本 */
 async function renderAISummary(stats, mistakes) {
     try {
         const result = await apiCall('POST', '/chat/summary', buildAiConfig() || {});
-        $('aiSummaryText').innerHTML = formatMarkdown(result.reply || result.error || '无法生成');
+        $('aiSummaryText').innerHTML = renderMarkdown(result.reply || result.error || '无法生成');
     } catch (err) {
         $('aiSummaryText').innerHTML = `<span style="color:var(--danger)">AI 诊断生成失败：${esc(err.message)}</span>`;
     }
-}
-
-/** 简单 markdown 转 HTML */
-function formatMarkdown(text) {
-    let html = esc(text);
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-    html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/\n/g, '<br>');
-    return html;
 }
 
 // ====== Load Data ======
@@ -509,10 +592,9 @@ async function loadStats() {
     try {
         const s = await apiCall('GET', '/stats');
         $('statTotal').textContent = s.total_mistakes;
-        const totalBySev = Object.values(s.by_severity).reduce((a, b) => a + b, 0);
-        $('statUnresolved').textContent = Math.max(0, totalBySev - (s.by_severity.high || 0));
-        $('statHigh').textContent = s.by_severity.high || 0;
-        $('sidebarFooter').textContent = `v0.0.1 · 共 ${s.total_mistakes} 条`;
+        $('statUnresolved').textContent = s.unresolved_count ?? 0;
+        $('statHigh').textContent = s.resolved_count ?? 0;
+        $('sidebarFooter').textContent = `v0.0.3 · 共 ${s.total_mistakes} 条`;
     } catch (e) { console.error('统计加载失败', e); }
 }
 
@@ -531,7 +613,8 @@ function renderSidebarList(mistakes) {
     if (!mistakes.length) { sidebarList.innerHTML = '<div class="list-loading">暂无记录</div>'; return; }
     sidebarList.innerHTML = mistakes.map(m => {
         const sub = m.submission || {};
-        return `<div class="mistake-entry${m.id===currentMistakeId?' active':''}" data-id="${m.id}" onclick="selectMistake(${m.id})"><div class="entry-title">${esc(sub.problem_name||'未知题目')}</div><div class="entry-meta"><span>${esc(fmtCat(m.error_category))}</span><span class="entry-tag ${m.resolved?'resolved':'unresolved'}">${m.resolved?'已解决':'未解决'}</span><span>${new Date(m.created_at).toLocaleDateString('zh-CN',{month:'short',day:'numeric'})}</span></div></div>`;
+        const statusText = fmtStatusBadge(m.error_category, m.resolved);
+        return `<div class="mistake-entry${m.id===currentMistakeId?' active':''}" data-id="${m.id}" onclick="selectMistake(${m.id})"><div class="entry-title">${esc(sub.problem_name||'未知题目')}</div><div class="entry-meta"><span>${esc(fmtCat(m.error_category))}</span><span class="entry-tag ${m.resolved?'resolved':'unresolved'}">${esc(statusText)}</span><span>${new Date(m.created_at).toLocaleDateString('zh-CN',{month:'short',day:'numeric'})}</span></div></div>`;
     }).join('');
 }
 

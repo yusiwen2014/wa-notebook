@@ -13,9 +13,10 @@ class Mistake(Base):
     submission_id: Mapped[int] = mapped_column(ForeignKey("submissions.id", ondelete="CASCADE"))
     submission: Mapped["Submission"] = relationship(back_populates="mistakes")
 
+    # v0.0.3 新的分类体系
     error_category: Mapped[str] = mapped_column(
         String(32), index=True,
-        comment="logic_error, boundary, overflow, uninitialized, complexity, precision, io_format, memory, typo, modular, graph, dp"
+        comment="CE, RE_div0, RE_oob, WA_logic, WA_code, TLE, MLE"
     )
     error_severity: Mapped[str] = mapped_column(
         String(16),
@@ -28,6 +29,12 @@ class Mistake(Base):
 
     hints: Mapped[Optional[list]] = mapped_column(SAJson, nullable=True)
     current_hint_index: Mapped[int] = mapped_column(default=0)
+
+    # v0.0.3 AI 自动生成的错误点清单
+    error_points: Mapped[Optional[list]] = mapped_column(SAJson, nullable=True)
+
+    # v0.0.3 新增反思/手动补充错误点字段
+    reflection: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     resolved: Mapped[bool] = mapped_column(default=False)
     resolved_at: Mapped[Optional[datetime.datetime]] = mapped_column(nullable=True)

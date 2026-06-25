@@ -14,10 +14,10 @@ DB_PATH = os.path.join(DATA_DIR, "wa_notebook.db")
 
 class Settings:
     app_name = "WA错题本"
-    version = "0.0.2"
+    version = "0.0.3"
     debug = True
     host = "127.0.0.1"
-    port = 8081
+    port = 8083
     # 使用绝对路径确保无论从哪启动都能找到数据库
     database_url = f"sqlite+aiosqlite:///{DB_PATH}"
     supported_platforms = ["luogu", "codeforces"]

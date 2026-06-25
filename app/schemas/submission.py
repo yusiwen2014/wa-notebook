@@ -50,6 +50,8 @@ class MistakeResponseSchema(Schema):
     error_detail = fields.Str()
     suggestion = fields.Str(allow_none=True)
     hints = fields.List(fields.Str(), allow_none=True)
+    error_points = fields.List(fields.Str(), allow_none=True)
+    reflection = fields.Str(allow_none=True)
     resolved = fields.Boolean()
     created_at = fields.DateTime()
 
