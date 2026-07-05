@@ -96,7 +96,7 @@
 
 | 厂家 | 模型 | 提供方 |
 |------|------|--------|
-| 🟦 **百度** · `baidu-2api` | ERNIE-4.0 / ERNIE-Speed / ERNIE-Lite | 反代（免费） |
+| 🟦 **百度** · `baidu-2api` | 文心一言 4.0 / 文心一言 Speed / 文心一言 Lite | 反代（免费） |
 | 🟧 **DuckDuckGo** · `DDG2API` | GPT-4o mini / Claude 3 Haiku / Llama 3.3 70B | 反代（免费） |
 | 🟪 **自定义** · OpenAI 兼容 | DeepSeek-V3 / 自有 API | 用户自配 |
 | 🟩 **Auto** · 自动降级 | 依次探测可用模型 | 内置 |

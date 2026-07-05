@@ -7,7 +7,7 @@
 ## 功能特性
 
 - **OpenAI 兼容** — 完整支持 `/v1/chat/completions` 和 `/v1/models` 接口
-- **多模型支持** — DeepSeek-V4、DeepSeek-R1、ERNIE-4.5、智能模式
+- **多模型支持** — DeepSeek-V4、DeepSeek-R1、文心一言 4.5、智能模式
 - **流式输出** — 支持 SSE 流式响应，兼容所有 OpenAI SDK
 - **思维链输出** — DeepSeek-R1 的推理过程通过 `reasoning_content` 字段输出
 - **双模式工具调用** — 支持 XML（Toolify 风格）和 JSON（DS2API 风格）两种函数调用机制
@@ -23,7 +23,7 @@
 |---------|---------|--------|------|
 | `deepseek-v4-pro` | DeepSeek-V4 | ✅ | DeepSeek V4，1M 上下文 |
 | `deepseek-r1` | DeepSeek-R1 | ✅ | DeepSeek R1 推理模型 |
-| `ernie-4.5-turbo` | ERNIE-4.5 | ❌ | 文心 4.5 |
+| `ernie-4.5-turbo` | 文心一言 4.5 | ❌ | 文心 4.5 |
 | `smartMode` | 智能模式 | ❌ | 百度智能路由 |
 
 ## 快速开始

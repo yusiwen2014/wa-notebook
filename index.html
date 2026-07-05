@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="WA错题本 —— 面向 OI/ACM 竞赛选手的 AI 智能错题分析与学习画像平台。TRAE AI 创造力大赛参赛作品。">
+<title>WA错题本 · 让每一次错误都有价值 | TRAE AI 创造力大赛</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a0a0f'/><text x='50' y='62' font-size='38' font-weight='900' fill='url(%23g)' text-anchor='middle' font-family='Arial'>WA</text><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300e5ff'/><stop offset='1' stop-color='%23a855f7'/></linearGradient></defs></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #111118;
+    --bg-card: rgba(22, 22, 31, 0.6);
+    --bg-elevated: rgba(28, 28, 40, 0.8);
+    --accent-cyan: #00e5ff;
+    --accent-purple: #a855f7;
+    --accent-pink: #ec4899;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --text-primary: #e8e8ed;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --border-glow: rgba(0, 229, 255, 0.3);
+    --glow-cyan: rgba(0, 229, 255, 0.15);
+    --glow-purple: rgba(168, 85, 247, 0.15);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.5);
+  }
+
+  html[data-theme="light"] {
+    --bg-primary: #fafafb;
+    --bg-secondary: #f1f1f4;
+    --bg-card: rgba(255, 255, 255, 0.7);
+    --bg-elevated: rgba(255, 255, 255, 0.9);
+    --text-primary: #0a0a0f;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-strong: rgba(0, 0, 0, 0.12);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    line-height: 1.6;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: rgba(120, 120, 130, 0.3); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(120, 120, 130, 0.5); }
+
+  #particles-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ============ NAVBAR ============ */
+  .navbar {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 32px);
+    max-width: 1180px;
+    padding: 12px 20px;
+    border-radius: 16px;
+    background: var(--bg-elevated);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-card);
+    transition: all 0.4s ease;
+  }
+  .navbar.scrolled {
+    top: 8px;
+    width: calc(100% - 48px);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text-primary);
+    text-decoration: none;
+    letter-spacing: -0.3px;
+  }
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 4px 12px var(--glow-cyan);
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: all 0.25s;
+  }
+  .nav-links a:hover {
+    color: var(--text-primary);
+    background: var(--border-subtle);
+  }
+  .nav-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--border-subtle);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+  }
+  .icon-btn:hover { color: var(--text-primary); background: var(--border-strong); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .btn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.25s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-pill:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--glow-cyan); }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 140px 0 80px;
+    position: relative;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 60px;
+    align-items: center;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    backdrop-filter: blur(10px);
+  }
+  .hero-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+
+  .hero-title {
+    font-size: clamp(40px, 5.4vw, 64px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  .hero-title .gradient-text {
+    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 50%, var(--accent-pink) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: gradient-shift 6s ease infinite;
+  }
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .hero-desc {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 36px;
+    max-width: 520px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 26px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: all 0.25s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #fff;
+    box-shadow: 0 8px 24px var(--glow-cyan);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0, 229, 255, 0.45); }
+  .btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+    backdrop-filter: blur(10px);
+  }
+  .btn-secondary:hover { background: var(--border-subtle); }
+  .btn svg { width: 16px; height: 16px; }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .hero-stat .num {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-stat .lbl {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Hero Visual: AI Chat Demo */
+  .hero-visual {
+    position: relative;
+    perspective: 1500px;
+  }
+  .chat-mock {
+    position: relative;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transform: rotateY(-4deg) rotateX(2deg);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(20px);
+  }
+  .hero-visual:hover .chat-mock { transform: rotateY(0deg) rotateX(0deg); }
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .chat-dots { display: flex; gap: 6px; }
+  .chat-dots span {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+  .chat-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .chat-body { padding: 20px; min-height: 320px; max-height: 380px; overflow: hidden; position: relative; }
+  .msg {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    animation: msgIn 0.6s ease forwards;
+    opacity: 0;
+  }
+  .msg.user { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .msg.ai .msg-avatar {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #fff;
+  }
+  .msg.user .msg-avatar {
+    background: var(--border-strong);
+    color: var(--text-primary);
+  }
+  .msg-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .msg.ai .msg-bubble {
+    background: var(--border-subtle);
+    color: var(--text-primary);
+    border-top-left-radius: 4px;
+  }
+  .msg.user .msg-bubble {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #fff;
+    border-top-right-radius: 4px;
+  }
+  .msg-1 { animation-delay: 0.3s; }
+  .msg-2 { animation-delay: 0.8s; }
+  .msg-3 { animation-delay: 1.4s; }
+  .msg-4 { animation-delay: 2.0s; }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .chat-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+  }
+  .chat-input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .chat-input input::placeholder { color: var(--text-muted); }
+  .chat-input .send-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chat-input .send-btn svg { width: 14px; height: 14px; }
+  .chat-input .model-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--border-subtle);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .model-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+  }
+
+  /* Floating mini cards */
+  .float-card {
+    position: absolute;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 12px 16px;
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(20px);
+    animation: floatY 6s ease-in-out infinite;
+    z-index: 2;
+  }
+  .float-card.card-wa {
+    top: 12%; left: -32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation-delay: 0s;
+  }
+  .float-card.card-profile {
+    bottom: 18%; right: -28px;
+    animation-delay: 2s;
+  }
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .float-card .icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .float-card .label { font-size: 11px; color: var(--text-muted); }
+  .float-card .value { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+
+  /* ============ SECTION ============ */
+  .section { padding: 110px 0; position: relative; z-index: 1; }
+  .section-header { text-align: center; max-width: 720px; margin: 0 auto 64px; }
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 18px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid rgba(0, 229, 255, 0.18);
+  }
+  .section-title {
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+  .section-title .gradient-text {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .section-desc {
+    font-size: 16.5px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+  }
+
+  /* ============ PROBLEM ============ */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .problem-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 32px 28px;
+    transition: all 0.35s;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+  .problem-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), rgba(239, 68, 68, 0.08), transparent 50%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .problem-card:hover::before { opacity: 1; }
+  .problem-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 16px 48px rgba(239, 68, 68, 0.1);
+  }
+  .problem-card .icon-wrap {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+  .problem-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .problem-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+  /* ============ SOLUTION FLOW ============ */
+  .flow-section {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .solution-flow {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    text-align: center;
+    flex: 0 0 200px;
+    padding: 28px 18px;
+    border-radius: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    position: relative;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  .flow-step:hover { transform: translateY(-4px); border-color: var(--border-glow); }
+  .flow-step.highlight {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.12), rgba(168, 85, 247, 0.12));
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 32px var(--glow-cyan);
+    transform: scale(1.04);
+  }
+  .flow-step .step-num {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 auto 16px;
+    color: #fff;
+    box-shadow: 0 4px 16px var(--glow-cyan);
+  }
+  .flow-step .step-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .flow-step .step-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    color: var(--accent-cyan);
+    font-size: 22px;
+  }
+
+  /* ============ FEATURES ============ */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 36px 32px;
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 229, 255, 0.08), transparent 40%);
+    pointer-events: none;
+  }
+  .feature-card:hover::after { opacity: 1; }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 229, 255, 0.25);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  }
+  .feature-card.highlight {
+    border-color: rgba(0, 229, 255, 0.4);
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.06), rgba(168, 85, 247, 0.06));
+    box-shadow: 0 0 40px var(--glow-cyan);
+  }
+  .feat-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .feat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .feat-icon.purple { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.25); }
+  .feat-icon.cyan { background: rgba(0, 229, 255, 0.15); border: 1px solid rgba(0, 229, 255, 0.25); }
+  .feat-icon.green { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.25); }
+  .feat-icon.orange { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.25); }
+  .feat-icon.red { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.25); }
+  .feat-icon.pink { background: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.25); }
+  .feat-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .feat-badge.purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
+  .feat-badge.cyan { background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); }
+  .feat-badge.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+  .feat-badge.orange { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+  .feat-badge.red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+  .feature-card h3 { font-size: 21px; font-weight: 700; margin-bottom: 12px; line-height: 1.3; }
+  .feature-card p { font-size: 14.5px; color: var(--text-secondary); line-height: 1.75; }
+  .feature-card strong { color: var(--accent-cyan); font-weight: 600; }
+  .feature-card .feat-list {
+    list-style: none;
+    margin-top: 16px;
+    padding: 0;
+  }
+  .feature-card .feat-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+  .feature-card .feat-list li::before {
+    content: '✓';
+    color: var(--accent-green);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ============ MODEL MARKET ============ */
+  .market-section {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .market-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .market-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+  }
+  .market-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .market-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .market-card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+  .provider-group { margin-bottom: 16px; }
+  .provider-group:last-child { margin-bottom: 0; }
+  .provider-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+  .model-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .model-row:hover { border-color: var(--border-glow); transform: translateX(2px); }
+  .model-row .m-name { flex: 1; font-weight: 600; }
+  .model-row .m-id { color: var(--text-muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .model-row .del {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .model-row .del:hover { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+  .add-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all 0.2s;
+  }
+  .add-row:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0, 229, 255, 0.04); }
+
+  .summary-card .problem-list { list-style: none; padding: 0; }
+  .summary-card .problem-item {
+    padding: 12px 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .summary-card .problem-item:hover { border-color: var(--border-glow); transform: translateX(2px); }
+  .summary-card .problem-item .phead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .summary-card .problem-item .ptitle { font-size: 13.5px; font-weight: 600; }
+  .summary-card .problem-item .pmeta { font-size: 11.5px; color: var(--text-muted); margin-left: auto; }
+  .summary-card .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .summary-card .tag.wa { background: rgba(239, 68, 68, 0.18); color: #ef4444; }
+  .summary-card .tag.tle { background: rgba(245, 158, 11, 0.18); color: var(--accent-orange); }
+  .summary-card .tag.re { background: rgba(168, 85, 247, 0.18); color: var(--accent-purple); }
+  .summary-card .tag.ac { background: rgba(16, 185, 129, 0.18); color: var(--accent-green); }
+  .summary-card .problem-item .pinsight {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 6px;
+  }
+  .summary-card .problem-item .pinsight::before { content: '💡 '; }
+
+  /* ============ COMPARE ============ */
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .compare-panel {
+    border-radius: 20px;
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .compare-panel.old {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.06), rgba(239, 68, 68, 0.02));
+    border: 1px solid rgba(239, 68, 68, 0.18);
+  }
+  .compare-panel.new {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(16, 185, 129, 0.02));
+    border: 1px solid rgba(16, 185, 129, 0.18);
+  }
+  .compare-panel .panel-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .compare-panel.old .panel-label { color: var(--accent-red); }
+  .compare-panel.new .panel-label { color: var(--accent-green); }
+  .compare-panel h3 { font-size: 22px; font-weight: 700; margin-bottom: 18px; }
+  .compare-panel ul { list-style: none; padding: 0; }
+  .compare-panel li {
+    padding: 8px 0;
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.6;
+  }
+  .compare-panel.old li::before { content: '✕'; color: var(--accent-red); font-weight: 700; flex-shrink: 0; }
+  .compare-panel.new li::before { content: '✓'; color: var(--accent-green); font-weight: 700; flex-shrink: 0; }
+
+  /* ============ STATS ============ */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .stat-card {
+    text-align: center;
+    padding: 30px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-glow);
+    box-shadow: 0 0 32px var(--glow-cyan);
+  }
+  .stat-number {
+    font-size: 40px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .stat-label { font-size: 13.5px; color: var(--text-secondary); font-weight: 500; }
+
+  .platforms {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+  .platform-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.7;
+    transition: all 0.3s;
+  }
+  .platform-item:hover { opacity: 1; transform: translateY(-3px); }
+  .platform-item .plat-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    backdrop-filter: blur(10px);
+  }
+  .platform-item .plat-name { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+
+  /* ============ TIMELINE ============ */
+  .timeline {
+    position: relative;
+    margin: 0 auto;
+    max-width: 760px;
+    padding-left: 36px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple), transparent);
+  }
+  .timeline-item {
+    position: relative;
+    padding-bottom: 36px;
+  }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -31px; top: 6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: 0 0 12px var(--accent-cyan);
+  }
+  .timeline-item h4 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .timeline-item h4 .step-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .timeline-item p { font-size: 14.5px; color: var(--text-secondary); line-height: 1.7; }
+
+  /* ============ API RECOMMEND ============ */
+  .api-section {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .api-intro {
+    max-width: 720px;
+    margin: 0 auto 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .api-tip {
+    max-width: 720px;
+    margin: 0 auto 48px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: var(--text-primary);
+    font-size: 13.5px;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .api-tip strong { color: var(--accent-orange); }
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-bottom: 36px;
+  }
+  .api-card {
+    position: relative;
+    padding: 22px 22px 20px;
+    border-radius: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .api-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .api-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-glow);
+    box-shadow: var(--shadow-hover);
+  }
+  .api-card:hover::before { opacity: 1; }
+  .api-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .api-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+  .api-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .api-tag {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .api-tag.cyan { background: rgba(0,229,255,0.12); color: var(--accent-cyan); border: 1px solid rgba(0,229,255,0.25); }
+  .api-tag.purple { background: rgba(168,85,247,0.12); color: var(--accent-purple); border: 1px solid rgba(168,85,247,0.25); }
+  .api-tag.green { background: rgba(16,185,129,0.12); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.25); }
+  .api-tag.orange { background: rgba(245,158,11,0.12); color: var(--accent-orange); border: 1px solid rgba(245,158,11,0.25); }
+  .api-name {
+    font-size: 19px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .api-url {
+    font-size: 13px;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+    transition: color 0.2s;
+  }
+  .api-url:hover { color: var(--accent-purple); }
+  .api-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+  .api-footnote {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 20px 24px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(168,85,247,0.06));
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-size: 14.5px;
+    line-height: 1.7;
+  }
+  .api-footnote .hl { color: var(--accent-cyan); font-weight: 700; }
+  .api-footnote .hl-p { color: var(--accent-purple); font-weight: 700; }
+
+  @media (max-width: 768px) {
+    .api-grid { grid-template-columns: 1fr; gap: 14px; }
+  }
+
+  /* ============ QUOTE ============ */
+  .quote-section {
+    text-align: center;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .quote-text {
+    font-size: clamp(20px, 2.6vw, 28px);
+    font-weight: 600;
+    line-height: 1.5;
+    max-width: 760px;
+    margin: 0 auto;
+    color: var(--text-primary);
+    position: relative;
+  }
+  .quote-text::before {
+    content: '\201C';
+    font-size: 80px;
+    color: var(--accent-cyan);
+    position: absolute;
+    top: -36px; left: -24px;
+    opacity: 0.25;
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+  .quote-author { margin-top: 22px; font-size: 14px; color: var(--text-muted); }
+
+  /* ============ CTA ============ */
+  .cta-section { text-align: center; padding: 120px 0; position: relative; }
+  .cta-title {
+    font-size: clamp(32px, 4.5vw, 48px);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+  .cta-desc {
+    font-size: 17px;
+    color: var(--text-secondary);
+    margin-bottom: 36px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cta-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    padding: 48px 0 32px;
+    border-top: 1px solid var(--border-subtle);
+    position: relative;
+    z-index: 1;
+    background: var(--bg-secondary);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 32px;
+  }
+  .footer-brand .logo { margin-bottom: 12px; }
+  .footer-brand p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 280px;
+  }
+  .footer-col h5 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 8px; }
+  .footer-col a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    transition: color 0.2s;
+  }
+  .footer-col a:hover { color: var(--accent-cyan); }
+  .footer-bottom {
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-bottom p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .footer-bottom a { color: var(--accent-cyan); text-decoration: none; }
+
+  /* ============ REVEAL ============ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 968px) {
+    .nav-links { display: none; }
+    .hero { padding: 120px 0 60px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 50px; text-align: center; }
+    .hero-desc { margin-left: auto; margin-right: auto; }
+    .hero-actions { justify-content: center; }
+    .hero-stats { justify-content: center; }
+    .hero-visual { max-width: 480px; margin: 0 auto; }
+    .section { padding: 80px 0; }
+    .section-header { margin-bottom: 48px; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+    .compare-row { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .solution-flow { flex-direction: column; align-items: center; }
+    .flow-arrow { transform: rotate(90deg); }
+    .market-layout { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .float-card.card-wa { left: -8px; }
+    .float-card.card-profile { right: -8px; }
+  }
+  @media (max-width: 480px) {
+    .container { padding: 0 18px; }
+    .navbar { padding: 10px 14px; }
+    .hero-stats { flex-direction: column; gap: 18px; }
+    .stat-number { font-size: 30px; }
+    .footer-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="#" class="logo">
+    <div class="logo-mark">WA</div>
+    <span>WA错题本</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#problem">痛点</a></li>
+    <li><a href="#solution">方案</a></li>
+    <li><a href="#features">功能</a></li>
+    <li><a href="#showcase">演示</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#process">架构</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="icon-btn" id="themeToggle" aria-label="切换主题" title="切换主题">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+    <a href="https://forum.trae.cn/t/topic/22548" target="_blank" class="btn-pill">
+      大赛报名
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge reveal">
+          <span class="dot"></span>
+          TRAE AI 创造力大赛 · 参赛作品 v0.1.1
+        </div>
+        <h1 class="hero-title reveal reveal-delay-1">
+          让每一次<br>
+          <span class="gradient-text">WA 都有价值</span>
+        </h1>
+        <p class="hero-desc reveal reveal-delay-2">
+          面向 OI / ACM 竞赛选手的 AI 智能错题分析与学习画像平台。<br>
+          自动分析错题 · 构建专属学习画像 · 精准突破薄弱点。
+        </p>
+        <div class="hero-actions reveal reveal-delay-2">
+          <a href="#features" class="btn btn-primary">
+            探索功能
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#showcase" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            观看演示
+          </a>
+        </div>
+        <div class="hero-stats reveal reveal-delay-3">
+          <div class="hero-stat">
+            <div class="num">3+</div>
+            <div class="lbl">OJ 平台接入</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num">12+</div>
+            <div class="lbl">错误分类维度</div>
+          </div>
+          <div class="hero-stat">
+            <div class="num">100%</div>
+            <div class="lbl">AI 自动分析</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="float-card card-wa">
+          <div class="icon" style="background:rgba(239,68,68,0.15);color:#ef4444;">!</div>
+          <div>
+            <div class="label">刚刚</div>
+            <div class="value">WA · 边界±1</div>
+          </div>
+        </div>
+        <div class="float-card card-profile">
+          <div class="label" style="margin-bottom:4px;">薄弱算法</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span style="font-size:11px;padding:3px 8px;background:rgba(239,68,68,0.15);color:#ef4444;border-radius:6px;font-weight:600;">DP</span>
+            <span style="font-size:11px;padding:3px 8px;background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:6px;font-weight:600;">图论</span>
+            <span style="font-size:11px;padding:3px 8px;background:rgba(168,85,247,0.15);color:#a855f7;border-radius:6px;font-weight:600;">数论</span>
+          </div>
+        </div>
+        <div class="chat-mock">
+          <div class="chat-header">
+            <div class="chat-dots"><span></span><span></span><span></span></div>
+            <div class="chat-title">WA错题本 · AI 对话</div>
+          </div>
+          <div class="chat-body">
+            <div class="msg user msg-1">
+              <div class="msg-avatar">我</div>
+              <div class="msg-bubble">我的 DP 代码总是 WA，但思路感觉没问题？</div>
+            </div>
+            <div class="msg ai msg-2">
+              <div class="msg-avatar">AI</div>
+              <div class="msg-bubble">我看了你的提交记录，发现有 3 次相似错误集中在 <strong>边界处理</strong>。让我具体分析一下你的状态转移方程…</div>
+            </div>
+            <div class="msg ai msg-3">
+              <div class="msg-avatar">AI</div>
+              <div class="msg-bubble">根据你的 12 次提交，已生成 <strong>薄弱点报告</strong>：<br>• 数组越界: 4次<br>• 初始值错误: 3次<br>• 边界±1: 3次</div>
+            </div>
+            <div class="msg user msg-4">
+              <div class="msg-avatar">我</div>
+              <div class="msg-bubble">我应该怎么针对性练习？</div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <span class="model-tag">Auto</span>
+            <input type="text" placeholder="询问任何错题细节…" disabled>
+            <button class="send-btn" aria-label="发送">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="section" id="problem">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 痛点洞察</div>
+      <h2 class="section-title reveal">每一个 OIer 都经历过的<span class="gradient-text">困境</span></h2>
+      <p class="section-desc reveal">在 Luogu、AtCoder、Codeforces 上刷题时，错题总是零散分布，难以系统化复盘。</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="icon-wrap">❓</div>
+        <h3>题解看不懂</h3>
+        <p>官方题解跳步严重，讨论区解释零散晦涩。别人的思路和自己的代码之间，总隔着一层迷雾。</p>
+      </div>
+      <div class="problem-card reveal reveal-delay-1">
+        <div class="icon-wrap">🤖</div>
+        <h3>AI 不了解上下文</h3>
+        <p>把代码丢给 ChatGPT，它不知道题目背景、测试数据、提交平台。得不到"为什么这写法不对"的精准答案。</p>
+      </div>
+      <div class="problem-card reveal reveal-delay-2">
+        <div class="icon-wrap">🔄</div>
+        <h3>同类错误反复犯</h3>
+        <p>这次数组越界，下次整数溢出，再下次又是边界条件。同一坑踩了一次又一次，没有系统化反馈。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION FLOW -->
+<section class="section flow-section" id="solution">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 我们的方案</div>
+      <h2 class="section-title reveal">用<span class="gradient-text">学习画像</span>驱动你的竞赛之路</h2>
+      <p class="section-desc reveal">不止是记录——AI 分析每一次提交，构建你的学习画像，精准定位薄弱点。</p>
+    </div>
+    <div class="solution-flow">
+      <div class="flow-step reveal">
+        <div class="step-num">1</div>
+        <div class="step-title">记录错题</div>
+        <div class="step-desc">粘贴代码或提交链接</div>
+      </div>
+      <div class="flow-arrow reveal reveal-delay-1">→</div>
+      <div class="flow-step reveal reveal-delay-1">
+        <div class="step-num">2</div>
+        <div class="step-title">AI 分析</div>
+        <div class="step-desc">生成错误点 & 提示</div>
+      </div>
+      <div class="flow-arrow reveal reveal-delay-2">→</div>
+      <div class="flow-step highlight reveal reveal-delay-2">
+        <div class="step-num">3</div>
+        <div class="step-title">学习画像</div>
+        <div class="step-desc">分析习惯 · 识别薄弱</div>
+      </div>
+      <div class="flow-arrow reveal reveal-delay-3">→</div>
+      <div class="flow-step reveal reveal-delay-3">
+        <div class="step-num">4</div>
+        <div class="step-title">精准提升</div>
+        <div class="step-desc">针对性训练 · 突破瓶颈</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 核心功能</div>
+      <h2 class="section-title reveal">六大核心能力</h2>
+      <p class="section-desc reveal">每一个功能都围绕一个目标：构建你的学习画像，让数据驱动你的竞赛之路。</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card highlight reveal">
+        <div class="feat-head">
+          <div class="feat-icon cyan">📊</div>
+          <span class="feat-badge cyan">核心能力</span>
+        </div>
+        <h3>智能学习画像</h3>
+        <p>分析错题记录和提交时间，自动生成学习画像：</p>
+        <ul class="feat-list">
+          <li><strong>学习时段</strong>分布：你是夜猫子还是早起党？</li>
+          <li><strong>错误类型</strong>占比：WA / RE / TLE / CE 哪个最常犯？</li>
+          <li><strong>薄弱算法</strong>领域：动态规划 / 图论 / 数论？</li>
+          <li><strong>代码风格</strong>特点：缩进 / 命名 / 注释习惯</li>
+        </ul>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feat-head">
+          <div class="feat-icon red">🔍</div>
+          <span class="feat-badge red">全 AI 分析</span>
+        </div>
+        <h3>AI 自动生成错误点</h3>
+        <p>粘贴代码后，AI 自动分析并生成结构化的错误检查点列表：变量名一致性、循环边界、输入输出格式等具体检查项，不再依赖经验。</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feat-head">
+          <div class="feat-icon purple">🔗</div>
+          <span class="feat-badge purple">账号同步</span>
+        </div>
+        <h3>Codeforces API 集成</h3>
+        <p>保存 CF 账号一键获取真实提交记录，自动分析 WA/RE/TLE/CE 等错误提交，融入用户画像。支持 Codeforces、洛谷、AtCoder 等主流平台。</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feat-head">
+          <div class="feat-icon orange">💡</div>
+          <span class="feat-badge orange">引导式反馈</span>
+        </div>
+        <h3>分层提示系统</h3>
+        <p>低级错误：AI 直接指出问题位置和原因。深层问题：分层递进提示，引导你自己找到答案。锻炼 Debug 能力，而非养成"看答案"的依赖。</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feat-head">
+          <div class="feat-icon green">🎨</div>
+          <span class="feat-badge green">主题切换</span>
+        </div>
+        <h3>亮色 / 暗色主题</h3>
+        <p>支持亮色和暗色两种主题模式，点击右上角按钮即可切换。设置自动保存，下次打开保持上次选择，适配不同使用场景。</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feat-head">
+          <div class="feat-icon pink">🧠</div>
+          <span class="feat-badge purple">多模型聚合</span>
+        </div>
+        <h3>模型广场 · Auto 模式</h3>
+        <p>内置百度 / DuckDuckGo 反代模型，支持用户添加 OpenAI 兼容 API。<strong>Auto 模式</strong>会依次探测可用模型，确保在某一服务不可用时仍能继续获得 AI 辅助。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE: Model Market + Summary -->
+<section class="section market-section" id="showcase">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 核心交互演示</div>
+      <h2 class="section-title reveal">从模型选择到错题总结的<span class="gradient-text">完整闭环</span></h2>
+      <p class="section-desc reveal">OpenCode 风格的模型广场 + Gemini 风格的错题总结页面，单击切换，所见即所得。</p>
+    </div>
+    <div class="market-layout">
+      <div class="market-card reveal">
+        <div class="market-card-head">
+          <div class="market-card-title"><span class="dot"></span>模型广场</div>
+          <span class="feat-badge cyan">3 厂家 · 8 模型</span>
+        </div>
+
+        <div class="provider-group">
+          <div class="provider-name">百度 · baidu-2api</div>
+          <div class="model-row">
+            <span class="m-name">文心一言 4.0</span>
+            <span class="m-id">ernie-4.0-8k</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">文心一言 Speed</span>
+            <span class="m-id">ernie-speed-128k</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">文心一言 Lite</span>
+            <span class="m-id">ernie-lite-8k</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+        </div>
+
+        <div class="provider-group">
+          <div class="provider-name">DuckDuckGo · DDG2API</div>
+          <div class="model-row">
+            <span class="m-name">GPT-4o mini</span>
+            <span class="m-id">gpt-4o-mini</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">Claude 3 Haiku</span>
+            <span class="m-id">claude-3-haiku</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">Llama 3.3 70B</span>
+            <span class="m-id">llama-3.3-70b</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+        </div>
+
+        <div class="provider-group">
+          <div class="provider-name">OpenAI 兼容 · 自定义</div>
+          <div class="model-row">
+            <span class="m-name">DeepSeek-V3</span>
+            <span class="m-id">deepseek-chat</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">Auto · 自动降级</span>
+            <span class="m-id">auto-fallback</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+        </div>
+
+        <div class="add-row">
+          <span style="font-size:18px;line-height:1;">+</span>
+          添加模型 / 厂家
+        </div>
+      </div>
+
+      <div class="market-card summary-card reveal reveal-delay-1">
+        <div class="market-card-head">
+          <div class="market-card-title"><span class="dot"></span>本周错题总结</div>
+          <span class="feat-badge green">AI 已生成</span>
+        </div>
+        <ul class="problem-list">
+          <li class="problem-item">
+            <div class="phead">
+              <span class="tag wa">WA</span>
+              <span class="ptitle">P1439 最长公共子序列</span>
+              <span class="pmeta">3 次提交</span>
+            </div>
+            <div class="pinsight">状态转移方程边界处理错误，DP 数组下标从 1 开始但访问了 0 位置</div>
+          </li>
+          <li class="problem-item">
+            <div class="phead">
+              <span class="tag tle">TLE</span>
+              <span class="ptitle">CF 1749D 计数问题</span>
+              <span class="pmeta">2 次提交</span>
+            </div>
+            <div class="pinsight">O(n²) 复杂度未优化，应使用线性筛 + 前缀和将复杂度降至 O(n)</div>
+          </li>
+          <li class="problem-item">
+            <div class="phead">
+              <span class="tag re">RE</span>
+              <span class="ptitle">P3374 树状数组模板</span>
+              <span class="pmeta">1 次提交</span>
+            </div>
+            <div class="pinsight">vector 越界访问，未对 query 范围做合法性检查</div>
+          </li>
+          <li class="problem-item">
+            <div class="phead">
+              <span class="tag ac">AC</span>
+              <span class="ptitle">P1024 一元三次方程</span>
+              <span class="pmeta">1 次 AC</span>
+            </div>
+            <div class="pinsight">枚举法 AC，注意 double 精度问题已规避</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTRAST -->
+<section class="section" id="contrast">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 前后对比</div>
+      <h2 class="section-title reveal">WA错题本带来的<span class="gradient-text">改变</span></h2>
+    </div>
+    <div class="compare-row">
+      <div class="compare-panel old reveal">
+        <div class="panel-label">🔴 没有错题本之前</div>
+        <h3>低效的纠错循环</h3>
+        <ul>
+          <li>代码错了只能到处翻题解</li>
+          <li>AI 不了解你的代码上下文</li>
+          <li>同样类型的错误反复出现</li>
+          <li>不知道自己到底薄弱在哪里</li>
+          <li>没有系统化的错题管理</li>
+        </ul>
+      </div>
+      <div class="compare-panel new reveal reveal-delay-1">
+        <div class="panel-label">🟢 有了 WA错题本</div>
+        <h3>AI 驱动的精准成长</h3>
+        <ul>
+          <li>AI 自动分析，生成错误点清单</li>
+          <li>针对你的代码做个性化诊断</li>
+          <li>错误模式被识别并主动提醒</li>
+          <li>用户画像告诉你该重点突破什么</li>
+          <li>Codeforces 账号同步 · 真实数据分析</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="section flow-section" id="stats">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 技术特点</div>
+      <h2 class="section-title reveal">不只是感觉，<span class="gradient-text">数据会说话</span></h2>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card reveal">
+        <div class="stat-number">3+</div>
+        <div class="stat-label">主流 OJ 平台</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-1">
+        <div class="stat-number">12+</div>
+        <div class="stat-label">错误分类维度</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-2">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">AI 自动分析</div>
+      </div>
+      <div class="stat-card reveal reveal-delay-3">
+        <div class="stat-number">0</div>
+        <div class="stat-label">服务器数据存储</div>
+      </div>
+    </div>
+    <div class="platforms reveal">
+      <div class="platform-item">
+        <div class="plat-icon" style="color:#3498db;">LG</div>
+        <span class="plat-name">Luogu</span>
+      </div>
+      <div class="platform-item">
+        <div class="plat-icon" style="color:#e74c3c;">CF</div>
+        <span class="plat-name">Codeforces</span>
+      </div>
+      <div class="platform-item">
+        <div class="plat-icon" style="color:#2ecc71;">AC</div>
+        <span class="plat-name">AtCoder</span>
+      </div>
+      <div class="platform-item">
+        <div class="plat-icon" style="color:#f39c12;">LC</div>
+        <span class="plat-name">LeetCode</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS / TIMELINE -->
+<section class="section" id="process">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 技术架构</div>
+      <h2 class="section-title reveal">纯前端 + 本地存储 + <span class="gradient-text">多源 AI</span></h2>
+      <p class="section-desc reveal">基于 Web 的智能错题管理平台，数据留在本地，AI 分析在云端。集成开源反代项目，让免费 AI 触手可及。</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item reveal">
+        <h4>链接解析与抓取 <span class="step-pill">Step 01</span></h4>
+        <p>用户粘贴提交链接并选择 OJ 平台，系统自动抓取提交页面，提取代码内容和题目信息。</p>
+      </div>
+      <div class="timeline-item reveal">
+        <h4>多源 AI 反代调用 <span class="step-pill">Step 02</span></h4>
+        <p>本地部署 <a href="https://github.com/dijiaozhibei-top/baidu-2api" target="_blank" style="color:var(--accent-cyan);text-decoration:none;">baidu-2api</a> 与 <a href="https://github.com/meethuhu/DDG2API" target="_blank" style="color:var(--accent-cyan);text-decoration:none;">DDG2API</a>，无需 API Key 即可免费调用百度文心一言与 DuckDuckGo AI。</p>
+      </div>
+      <div class="timeline-item reveal">
+        <h4>AI 错误分析 <span class="step-pill">Step 03</span></h4>
+        <p>AI 自动生成错误分类和错误点清单，结合用户历史错题进行模式识别。</p>
+      </div>
+      <div class="timeline-item reveal">
+        <h4>本地数据存储 <span class="step-pill">Step 04</span></h4>
+        <p>使用 localStorage 在用户本地电脑存储所有数据，不上传服务器，保护隐私安全。</p>
+      </div>
+      <div class="timeline-item reveal">
+        <h4>用户画像生成 <span class="step-pill">Step 05</span></h4>
+        <p>跨题目分析错误模式，结合真实提交记录，建立个人错误画像，识别薄弱算法领域。</p>
+      </div>
+      <div class="timeline-item reveal">
+        <h4>模型池统一管理 <span class="step-pill">Step 06</span></h4>
+        <p>内置百度 / DuckDuckGo 免费模型 + 用户可添加 OpenAI 兼容 API，Auto 模式自动降级保证可用性。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- API RECOMMENDATION -->
+<section class="section api-section" id="api">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label reveal">● 模型与 API 推荐</div>
+      <h2 class="section-title reveal">选对你的 AI 后端，<span class="gradient-text">让分析更聪明</span></h2>
+    </div>
+    <p class="api-intro reveal">WAnote 默认通过 <strong style="color:var(--text-primary);">duck.ai</strong> 与 <strong style="color:var(--text-primary);">chat.baidu.com</strong> 的反代提供免费 AI 回答。如果你拥有自己的 API，模型质量与分析深度都会显著更强。以下是几个值得一试的平台：</p>
+    <div class="api-tip reveal"><strong>注意：</strong>下方推荐仅供参考，请根据自身需求与预算选择，并注意保护账号与 API Key 安全。</div>
+
+    <div class="api-grid">
+      <div class="api-card reveal">
+        <div class="api-card-top">
+          <span class="api-rank">01</span>
+          <div class="api-tags">
+            <span class="api-tag cyan">便宜</span>
+            <span class="api-tag green">聪明</span>
+          </div>
+        </div>
+        <h3 class="api-name">DeepSeek</h3>
+        <a class="api-url" href="https://deepseek.com" target="_blank">deepseek.com ↗</a>
+        <p class="api-desc">价格便宜还聪明，非常好用。国产模型中性价比首选，适合追求低成本与高质量兼顾的用户。</p>
+      </div>
+
+      <div class="api-card reveal reveal-delay-1">
+        <div class="api-card-top">
+          <span class="api-rank">02</span>
+          <div class="api-tags">
+            <span class="api-tag purple">中转站</span>
+            <span class="api-tag cyan">不溢价</span>
+          </div>
+        </div>
+        <h3 class="api-name">GPTsAPI</h3>
+        <a class="api-url" href="https://gptsapi.net" target="_blank">gptsapi.net ↗</a>
+        <p class="api-desc">价格与原厂相同，不会溢价。如果想用一个 API Key 管理多个模型，这个中转站非常合适。</p>
+      </div>
+
+      <div class="api-card reveal reveal-delay-2">
+        <div class="api-card-top">
+          <span class="api-rank">03</span>
+          <div class="api-tags">
+            <span class="api-tag green">可免费</span>
+            <span class="api-tag purple">模型多</span>
+          </div>
+        </div>
+        <h3 class="api-name">iamhc</h3>
+        <a class="api-url" href="https://api.iamhc.cn" target="_blank">api.iamhc.cn ↗</a>
+        <p class="api-desc">模型数量比 GPTsAPI 还要多，并且提供免费使用额度。付费档位可能略高于原厂价格，但胜在选择丰富。</p>
+      </div>
+
+      <div class="api-card reveal reveal-delay-3">
+        <div class="api-card-top">
+          <span class="api-rank">04</span>
+          <div class="api-tags">
+            <span class="api-tag green">免费 7B/8B</span>
+            <span class="api-tag orange">需实名</span>
+          </div>
+        </div>
+        <h3 class="api-name">SiliconFlow</h3>
+        <a class="api-url" href="https://siliconflow.cn" target="_blank">siliconflow.cn ↗</a>
+        <p class="api-desc">知名中转站，提供 7B / 8B 规模的免费模型，适合轻度测试与学习。注册时需要实名认证。</p>
+      </div>
+    </div>
+
+    <div class="api-footnote reveal">
+      如果暂时没有预算，<span class="hl">api.iamhc.cn</span> 是一个不错的起点；如果实在无法注册，WAnote 自带的 <span class="hl-p">反代模型</span> 也能满足日常使用。<br>但我们仍然 <strong style="color:var(--accent-cyan);">非常建议</strong> 你购买属于自己的 API —— 更稳定、更聪明、更可控。
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section class="section quote-section">
+  <div class="container">
+    <p class="quote-text reveal">真正的成长不是在 AC 之后庆祝，而是在 WA 之后反思。<br>WA错题本，让每一次错误都有价值。</p>
+    <p class="quote-author reveal">— 献给每一位在刷题路上不断前行的竞赛选手</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section cta-section" id="cta">
+  <div class="container">
+    <h2 class="cta-title reveal">让错误成为你<br><span class="gradient-text">最好的老师</span></h2>
+    <p class="cta-desc reveal">WA错题本 v0.1.1 · 全 AI 时代<br>TRAE AI 创造力大赛 2026</p>
+    <div class="cta-buttons reveal">
+      <a href="https://forum.trae.cn/t/topic/22548" target="_blank" class="btn btn-primary">
+        前往大赛报名
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="https://www.trae.cn/ai-creativity" target="_blank" class="btn btn-secondary">了解大赛详情</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <div class="logo-mark">WA</div>
+          <span>WA错题本</span>
+        </a>
+        <p>面向 OI / ACM 选手的 AI 智能错题分析与学习画像平台。让每一次错误都有价值。</p>
+      </div>
+      <div class="footer-col">
+        <h5>产品</h5>
+        <ul>
+          <li><a href="#features">核心功能</a></li>
+          <li><a href="#showcase">模型广场</a></li>
+          <li><a href="#api">API 推荐</a></li>
+          <li><a href="#process">技术架构</a></li>
+          <li><a href="https://github.com/dijiaozhibei-top/baidu-2api" target="_blank">baidu-2api</a></li>
+          <li><a href="https://github.com/meethuhu/DDG2API" target="_blank">DDG2API</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>大赛</h5>
+        <ul>
+          <li><a href="https://www.trae.cn/ai-creativity" target="_blank">大赛主页</a></li>
+          <li><a href="https://forum.trae.cn/t/topic/22548" target="_blank">参赛报名</a></li>
+          <li><a href="#cta">赛程安排</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>资源</h5>
+        <ul>
+          <li><a href="#problem">痛点洞察</a></li>
+          <li><a href="#solution">解决方案</a></li>
+          <li><a href="#contrast">效果对比</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 WA错题本 v0.1.1 · 参赛赛道：学习工作 / 造个新解法</p>
+      <p>初赛 06.16 - 07.15 · 复赛 07.21 - 08.09 · 决赛 08.21 - 08.22</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ============ THEME TOGGLE ============
+  (function() {
+    const html = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const sun = btn.querySelector('.icon-sun');
+    const moon = btn.querySelector('.icon-moon');
+    const saved = localStorage.getItem('wa-theme') || 'dark';
+    html.setAttribute('data-theme', saved);
+    updateIcon(saved);
+    btn.addEventListener('click', () => {
+      const cur = html.getAttribute('data-theme');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('wa-theme', next);
+      updateIcon(next);
+    });
+    function updateIcon(theme) {
+      sun.style.display = theme === 'dark' ? 'none' : 'block';
+      moon.style.display = theme === 'dark' ? 'block' : 'none';
+    }
+  })();
+
+  // ============ PARTICLES ============
+  (function() {
+    const canvas = document.getElementById('particles-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const mouse = { x: -999, y: -999 };
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.size = Math.random() * 2 + 0.5;
+        this.opacity = Math.random() * 0.5 + 0.1;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          const force = (150 - dist) / 150;
+          this.x += (dx / dist) * force * 1.5;
+          this.y += (dy / dist) * force * 1.5;
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,229,255,' + this.opacity + ')';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+    function drawLines() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 140) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = 'rgba(0,229,255,' + (0.06 * (1 - dist / 140)) + ')';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLines();
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    document.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+  })();
+
+  // ============ NAVBAR SCROLL ============
+  (function() {
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 30);
+    });
+  })();
+
+  // ============ SCROLL REVEAL ============
+  (function() {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  })();
+
+  // ============ FEATURE CARD MOUSE TRACKING ============
+  (function() {
+    document.querySelectorAll('.feature-card, .problem-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
+        card.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+      });
+    });
+  })();
+
+  // ============ SMOOTH SCROLL ============
+  (function() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href === '#' || href.length < 2) return;
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          const navH = 80;
+          const y = target.getBoundingClientRect().top + window.scrollY - navH;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
