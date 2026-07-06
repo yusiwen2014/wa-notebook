@@ -9,25 +9,41 @@ logger = logging.getLogger(__name__)
 BAIDU2API_BASE = "http://127.0.0.1:8000"
 DDG2API_BASE = "http://127.0.0.1:3000"
 
+# 反代服务不可用时的兜底模型清单（确保前端始终能展示）
+BAIDU_FALLBACK_MODELS = [
+    {"id": "ernie-4.0", "name": "ernie-4.0"},
+    {"id": "ernie-3.5", "name": "ernie-3.5"},
+    {"id": "ernie-speed", "name": "ernie-speed"},
+    {"id": "ernie-lite", "name": "ernie-lite"},
+    {"id": "ernie-tiny", "name": "ernie-tiny"},
+]
+DDG_FALLBACK_MODELS = [
+    {"id": "duckduckgo", "name": "DuckDuckGo AI"},
+]
 
-def _fetch_models(base_url: str) -> List[Dict]:
+
+def _fetch_models(base_url: str, fallback: List[Dict]) -> List[Dict]:
     try:
-        resp = requests.get(f"{base_url}/v1/models", timeout=10)
+        resp = requests.get(f"{base_url}/v1/models", timeout=2.5)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("data", [])
+        models = data.get("data", [])
+        if models:
+            return models
+        logger.warning(f"{base_url} 返回空模型列表，使用兜底")
+        return fallback
     except Exception as e:
-        logger.error(f"获取模型列表失败 {base_url}: {e}")
-        return []
+        logger.warning(f"反代不可达 {base_url}（{type(e).__name__}），使用兜底模型")
+        return fallback
 
 
 def get_baidu_models() -> List[Dict]:
-    models = _fetch_models(BAIDU2API_BASE)
+    models = _fetch_models(BAIDU2API_BASE, BAIDU_FALLBACK_MODELS)
     return [{**m, "provider": "baidu", "provider_name": "百度"} for m in models]
 
 
 def get_ddg_models() -> List[Dict]:
-    models = _fetch_models(DDG2API_BASE)
+    models = _fetch_models(DDG2API_BASE, DDG_FALLBACK_MODELS)
     return [{**m, "provider": "ddg", "provider_name": "DuckDuckGo"} for m in models]
 
 
@@ -58,7 +74,7 @@ def get_custom_models() -> List[Dict]:
 
 
 def get_models() -> List[Dict]:
-    return get_baidu_models() + get_ddg_models() + get_test_models() + get_custom_models()
+    return get_baidu_models() + get_ddg_models() + get_custom_models()
 
 
 def chat_baidu(model_id: str, messages: List[Dict]) -> str:
@@ -126,8 +142,6 @@ def chat(model_id: str, messages: List[Dict], api_key: Optional[str] = None, bas
         return chat_baidu(model_id, messages)
     elif model_id in [m["id"] for m in get_ddg_models()]:
         return chat_ddg(model_id, messages)
-    elif model_id.startswith("test-"):
-        return chat_test(messages)
     else:
         if not api_key or not base_url:
             return "【错误】自定义模型需要配置 API Key 和 Base URL。"
@@ -146,12 +160,6 @@ def chat_stream(model_id: str, messages: List[Dict], api_key: Optional[str] = No
         target_url = f"{DDG2API_BASE}/v1/chat/completions"
         payload = {"model": model_id, "messages": messages, "stream": True}
         headers = {"Content-Type": "application/json"}
-    elif model_id.startswith("test-"):
-        text = chat_test(messages)
-        for char in text:
-            yield f"data: {json.dumps({'choices': [{'delta': {'content': char}}]})}\n\n"
-        yield "data: [DONE]\n\n"
-        return
     else:
         if not api_key or not base_url:
             yield f"data: {json.dumps({'error': '自定义模型需要配置 API Key 和 Base URL'})}\n\n"

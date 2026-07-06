@@ -1314,7 +1314,7 @@
       <div>
         <div class="hero-badge reveal">
           <span class="dot"></span>
-          TRAE AI 创造力大赛 · 参赛作品 v0.1.1
+          TRAE AI 创造力大赛 · 参赛作品 v0.1.0
         </div>
         <h1 class="hero-title reveal reveal-delay-1">
           让每一次<br>
@@ -1527,7 +1527,7 @@
           <span class="feat-badge purple">多模型聚合</span>
         </div>
         <h3>模型广场 · Auto 模式</h3>
-        <p>内置百度 / DuckDuckGo 反代模型，支持用户添加 OpenAI 兼容 API。<strong>Auto 模式</strong>会依次探测可用模型，确保在某一服务不可用时仍能继续获得 AI 辅助。</p>
+        <p>内置百度 ernie 系列 / DuckDuckGo AI 反代模型，支持用户添加 OpenAI 兼容 API。<strong>Auto 模式</strong>会依次探测可用模型，确保在某一服务不可用时仍能继续获得 AI 辅助。</p>
       </div>
     </div>
   </div>
@@ -1545,24 +1545,34 @@
       <div class="market-card reveal">
         <div class="market-card-head">
           <div class="market-card-title"><span class="dot"></span>模型广场</div>
-          <span class="feat-badge cyan">3 厂家 · 8 模型</span>
+          <span class="feat-badge cyan">2 厂家 · 6 模型</span>
         </div>
 
         <div class="provider-group">
           <div class="provider-name">百度 · baidu-2api</div>
           <div class="model-row">
-            <span class="m-name">文心一言 4.0</span>
-            <span class="m-id">ernie-4.0-8k</span>
+            <span class="m-name">ernie-4.0</span>
+            <span class="m-id">ernie-4.0</span>
             <button class="del" aria-label="删除">×</button>
           </div>
           <div class="model-row">
-            <span class="m-name">文心一言 Speed</span>
-            <span class="m-id">ernie-speed-128k</span>
+            <span class="m-name">ernie-3.5</span>
+            <span class="m-id">ernie-3.5</span>
             <button class="del" aria-label="删除">×</button>
           </div>
           <div class="model-row">
-            <span class="m-name">文心一言 Lite</span>
-            <span class="m-id">ernie-lite-8k</span>
+            <span class="m-name">ernie-speed</span>
+            <span class="m-id">ernie-speed</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">ernie-lite</span>
+            <span class="m-id">ernie-lite</span>
+            <button class="del" aria-label="删除">×</button>
+          </div>
+          <div class="model-row">
+            <span class="m-name">ernie-tiny</span>
+            <span class="m-id">ernie-tiny</span>
             <button class="del" aria-label="删除">×</button>
           </div>
         </div>
@@ -1570,39 +1580,15 @@
         <div class="provider-group">
           <div class="provider-name">DuckDuckGo · DDG2API</div>
           <div class="model-row">
-            <span class="m-name">GPT-4o mini</span>
-            <span class="m-id">gpt-4o-mini</span>
-            <button class="del" aria-label="删除">×</button>
-          </div>
-          <div class="model-row">
-            <span class="m-name">Claude 3 Haiku</span>
-            <span class="m-id">claude-3-haiku</span>
-            <button class="del" aria-label="删除">×</button>
-          </div>
-          <div class="model-row">
-            <span class="m-name">Llama 3.3 70B</span>
-            <span class="m-id">llama-3.3-70b</span>
-            <button class="del" aria-label="删除">×</button>
-          </div>
-        </div>
-
-        <div class="provider-group">
-          <div class="provider-name">OpenAI 兼容 · 自定义</div>
-          <div class="model-row">
-            <span class="m-name">DeepSeek-V3</span>
-            <span class="m-id">deepseek-chat</span>
-            <button class="del" aria-label="删除">×</button>
-          </div>
-          <div class="model-row">
-            <span class="m-name">Auto · 自动降级</span>
-            <span class="m-id">auto-fallback</span>
+            <span class="m-name">DuckDuckGo AI</span>
+            <span class="m-id">duckduckgo</span>
             <button class="del" aria-label="删除">×</button>
           </div>
         </div>
 
         <div class="add-row">
           <span style="font-size:18px;line-height:1;">+</span>
-          添加模型 / 厂家
+          添加自定义 OpenAI 兼容模型
         </div>
       </div>
 
@@ -1745,7 +1731,7 @@
       </div>
       <div class="timeline-item reveal">
         <h4>多源 AI 反代调用 <span class="step-pill">Step 02</span></h4>
-        <p>本地部署 <a href="https://github.com/dijiaozhibei-top/baidu-2api" target="_blank" style="color:var(--accent-cyan);text-decoration:none;">baidu-2api</a> 与 <a href="https://github.com/meethuhu/DDG2API" target="_blank" style="color:var(--accent-cyan);text-decoration:none;">DDG2API</a>，无需 API Key 即可免费调用百度文心一言与 DuckDuckGo AI。</p>
+        <p>本地部署 <a href="https://github.com/dijiaozhibei-top/baidu-2api" target="_blank" style="color:var(--accent-cyan);text-decoration:none;">baidu-2api</a> 与 <a href="https://github.com/meethuhu/DDG2API" target="_blank" style="color:var(--accent-cyan);text-decoration:none;">DDG2API</a>，无需 API Key 即可免费调用 ernie 与 DuckDuckGo AI。</p>
       </div>
       <div class="timeline-item reveal">
         <h4>AI 错误分析 <span class="step-pill">Step 03</span></h4>
@@ -1849,7 +1835,7 @@
 <section class="section cta-section" id="cta">
   <div class="container">
     <h2 class="cta-title reveal">让错误成为你<br><span class="gradient-text">最好的老师</span></h2>
-    <p class="cta-desc reveal">WA错题本 v0.1.1 · 全 AI 时代<br>TRAE AI 创造力大赛 2026</p>
+    <p class="cta-desc reveal">WA错题本 v0.1.0 · 全 AI 时代<br>TRAE AI 创造力大赛 2026</p>
     <div class="cta-buttons reveal">
       <a href="https://forum.trae.cn/t/topic/22548" target="_blank" class="btn btn-primary">
         前往大赛报名
@@ -1900,7 +1886,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 WA错题本 v0.1.1 · 参赛赛道：学习工作 / 造个新解法</p>
+      <p>© 2026 WA错题本 v0.1.0 · 参赛赛道：学习工作 / 造个新解法</p>
       <p>初赛 06.16 - 07.15 · 复赛 07.21 - 08.09 · 决赛 08.21 - 08.22</p>
     </div>
   </div>

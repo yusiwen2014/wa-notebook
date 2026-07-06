@@ -11,7 +11,7 @@ class Settings:
     version = "0.0.3"
     debug = True
     host = "127.0.0.1"
-    port = 8083
+    port = int(os.environ.get('PORT', 8083))
     database_url = f"sqlite:///{DB_PATH}"
     supported_platforms = ["luogu", "codeforces"]
 
